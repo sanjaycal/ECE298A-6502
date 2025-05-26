@@ -26,8 +26,10 @@ module tt_um_NES_Emulator (
   assign uio_out = 0;
   assign uio_oe  = 0;
 
-  tt_um_6502_module CPU(5, 6 ,mem_addr, mem_data_in, mem_data_out, clk);
-  tt_um_memory_module Memory(0, mem_addr, mem_data_in, mem_data_out, clk);
+  tt_um_6502_module CPU(8'd5, 8'd5,mem_addr, mem_data_in, mem_data_out, clk);
+  tt_um_memory_module Memory(1'b0, mem_addr, mem_data_in, mem_data_out, clk);
+  tt_um_audio_module Audio(8'd5, 8'd5 ,mem_addr, mem_data_in, mem_data_out, clk);
+  tt_um_vga_driver_module VGA_driver(8'd5, 8'd5 ,mem_addr, mem_data_in, mem_data_out, clk);
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
 
