@@ -9,7 +9,9 @@ module tt_um_6502_module(
     input  wire [7:0] data_in, 
     input  wire [7:0] instruction_in,
     output wire [7:0] mem_addr,
-    output wire [7:0] mem_data
+    output wire [7:0] mem_data_in,
+    input  wire [7:0] mem_data_out,
+    input wire clk
 );
 
   reg [7:0] A;
@@ -19,6 +21,6 @@ module tt_um_6502_module(
   reg [5:0] P;
   
   assign mem_addr = data_in;
-  assign mem_data = instruction_in;
+  assign mem_data_in = instruction_in;
 
 endmodule
