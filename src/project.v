@@ -16,10 +16,54 @@ module tt_um_6502 (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  reg [7:0] tmp;
   wire [7:0] mem_data_in;
   wire [7:0] mem_data_out;
   wire [7:0] mem_addr;
+  wire [7:0] instruction;
+  wire [7:0] processor_status_register;
+  wire index_register_y_enable;
+  wire index_register_x_enable;
+  wire stack_pointer_register_enable;
+  wire alu_enable;
+  wire accumulator_enable;
+  wire pc_enable;
+  wire input_data_latch_enable;
+  wire rdy;
+  wire rw;
+  wire dbe;
+  wire res_in;
+  wire irq_in;
+  wire nmi_in;
+  wire res;
+  wire irq;
+  wire nmi;
+  wire [7:0] internal_adh;
+  wire [7:0] internal_adl;
+  wire [7:0] data_bus;
+  wire [7:0] internal_data_bus;
+  wire clk_cpu;
+  wire clk_output;
+
+  clock_generator clockGenerator(clk, clk_cpu, clk_output);
+  instruction_decode instructionDecode(
+    instruction,
+    processor_status_register,
+    clk,
+    rw,
+    input_data_latch_enable,
+    pc_enable,
+    accumulator_enable,
+    alu_enable,
+    stack_pointer_register_enable,
+    index_register_x_enable,
+    index_register_y_enable,
+    res,
+    irq,
+    nmi,
+    rdy
+  );
+
+  interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
