@@ -1,4 +1,4 @@
-
+`include "../inc/opcode.vh"
 `default_nettype none
 
 module instruction_decode (
@@ -19,4 +19,23 @@ module instruction_decode (
     input  wire       rdy
 );
 
+reg [1:0] countdown = 1;
+wire [1:0] countdown_next;
+
+reg [7:0] OPCODE;
+
+
+always @(*) begin
+    countdown_next = countdown - 1;
+    if(countdown_next == 0) begin
+        OPCODE = instruction;
+        case(instruction)
+            `OP_ALS_ZPG : countdown_next <= 2; 
+        endcase
+    end    
+end
+
+always @(posedge clk ) begin
+    countdown <= countdown_next;
+end
 endmodule
