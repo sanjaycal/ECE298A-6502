@@ -105,6 +105,6 @@ always @(posedge clk ) begin
     end    
 end
 
-wire _unused = {res, irq, nmi, processor_status_register_read };
+wire _unused = &{res, irq, nmi, processor_status_register_read };
 
 endmodule
