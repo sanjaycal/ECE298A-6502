@@ -4,6 +4,7 @@
  */
 `include "../src/clock_generator.v"
 `include "../src/instruction_decode.v"
+`include "../src/interrupt_logic.v"
 
 `default_nettype none
 
