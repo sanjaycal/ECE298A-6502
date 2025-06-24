@@ -124,7 +124,7 @@ module tt_um_6502 (
   end
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, 1'b0, ui_in, mem_data_in, mem_data_out, mem_addr, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, internal_adh, internal_adl, data_bus, internal_data_bus, processor_status_register_enables, accumulator, stack_pointer_register, index_register_x, index_register_y};
+  wire _unused = &{ena, 1'b0, ui_in, mem_data_in, mem_data_out, mem_addr, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, internal_adh, internal_adl, data_bus, internal_data_bus, processor_status_register_enables, accumulator, index_register_x, index_register_y};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = address_register;
