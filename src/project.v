@@ -64,7 +64,6 @@ module tt_um_6502 (
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
     instruction_register,
-    processor_status_register,
     clk,
     res,
     irq,
@@ -131,7 +130,7 @@ module tt_um_6502 (
   assign irq_in = 0;
   assign nmi_in = 0;
   assign res_in = 0;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write, memory_address};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = address_register;

@@ -5,7 +5,6 @@
 
 module instruction_decode (
     input  wire [7:0] instruction,
-    input  wire [6:0] processor_status_register,
     input  wire       clk,
     input  wire       res,
     input  wire       irq,
@@ -59,7 +58,7 @@ always @(*) begin
     case(STATE)
     T_0: begin
         OPCODE = instruction;
-        if((instruction & 8'b00011100) == `ADR_ZPG) begin
+        if((instruction & 8'b00011100) == {3'b000,`ADR_ZPG,2'b00}) begin
             ADDRESSING = `ADR_ZPG;
         end
         pc_enable = 1;   // Increment Program Counter  
@@ -105,5 +104,7 @@ always @(posedge clk ) begin
         endcase
     end    
 end
+
+wire _unused = {res, irq, nmi, processor_status_register_read };
 
 endmodule
