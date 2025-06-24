@@ -1,5 +1,6 @@
 `include "../inc/opcode.vh"
 `include "../inc/status_register.vh"
+
 `default_nettype none
 
 module instruction_decode (
@@ -11,20 +12,20 @@ module instruction_decode (
     input  wire       nmi,
     input  wire       rdy,
     input  wire [6:0] processor_status_register_read,
-    output wire [6:0] processor_status_register_write,        
+    output reg [6:0] processor_status_register_write,        
     output reg [15:0] memory_address,  // better name for this
-    output wire       address_select,
-    output wire       processor_status_register_rw,
-    output wire       rw,
-    output wire       data_buffer_enable,
-    output wire       data_buffer_direction, // 1 for internal, 0 for external
-    output wire       input_data_latch_enable,
-    output wire       pc_enable,
-    output wire       accumulator_enable,
-    output wire       alu_enable,
-    output wire       stack_pointer_register_enable,
-    output wire       index_register_X_enable,
-    output wire       index_register_Y_enable
+    output reg       address_select,
+    output reg       processor_status_register_rw,
+    output reg       rw,
+    output reg       data_buffer_enable,
+    output reg       data_buffer_direction, // 1 for internal, 0 for external
+    output reg       input_data_latch_enable,
+    output reg       pc_enable,
+    output reg       accumulator_enable,
+    output reg       alu_enable,
+    output reg       stack_pointer_register_enable,
+    output reg       index_register_X_enable,
+    output reg       index_register_Y_enable
 );
 
 localparam T_0 = 3'd0;
@@ -44,7 +45,7 @@ always @(*) begin
     processor_status_register_write = 1;
     address_select = 1;
     processor_status_register_rw = 1;
-    rw = 1
+    rw = 1;
     data_buffer_enable = 0;
     data_buffer_direction = 1; 
     input_data_latch_enable = 0;
@@ -94,13 +95,13 @@ always @(posedge clk ) begin
     if(rdy) begin
         case(STATE) // Most likely state transitions are going to be happening in the 
                     // combinational block as we add more instructions (state <= next_state)
-        T_0: STATE <= T_1
-        T_1: STATE <= T_2
-        T_2: STATE <= T_3
-        T_3: STATE <= T_4
-        T_4: STATE <= T_5
-        T_5: STATE <= T_6
-        T_6: STATE <= T_0
+        T_0: STATE <= T_1;
+        T_1: STATE <= T_2;
+        T_2: STATE <= T_3;
+        T_3: STATE <= T_4;
+        T_4: STATE <= T_5;
+        T_5: STATE <= T_6;
+        T_6: STATE <= T_0;
         endcase
     end    
 end

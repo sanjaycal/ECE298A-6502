@@ -37,7 +37,12 @@ module tt_um_6502 (
   wire nmi;
   wire clk_cpu;
   wire clk_output;
-  wire [6:0] processor_status_register_enables;
+  wire address_select;
+  wire data_buffer_enable;
+  wire data_buffer_direction;
+  wire processor_status_register_rw;
+  wire [6:0] processor_status_register_read;
+  wire [6:0] processor_status_register_write;
 
 
   reg [7:0] address_register = 0;
@@ -49,6 +54,7 @@ module tt_um_6502 (
   reg [7:0] data_bus_buffer;
 
   reg [15:0] pc;
+  reg [15:0] memory_address;
   reg [7:0] accumulator;
   reg [7:0] index_register_x;
   reg [7:0] index_register_y;
@@ -60,12 +66,18 @@ module tt_um_6502 (
     instruction_register,
     processor_status_register,
     clk,
-    rw,
     res,
     irq,
     nmi,
     rdy,
-    processor_status_register_enables,
+    processor_status_register_read,
+    processor_status_register_write,
+    memory_address,
+    address_select,
+    processor_status_register_rw,
+    rw,
+    data_buffer_enable,
+    data_buffer_direction,
     input_data_latch_enable,
     pc_enable,
     accumulator_enable,
@@ -119,7 +131,7 @@ module tt_um_6502 (
   assign irq_in = 0;
   assign nmi_in = 0;
   assign res_in = 0;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, processor_status_register_enables, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = address_register;
