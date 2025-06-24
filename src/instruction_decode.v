@@ -14,7 +14,7 @@ module instruction_decode (
     output wire [6:0] processor_status_register_write,        
     output reg [15:0] memory_address,  // better name for this
     output wire       address_select,
-    output wire       processor_status_register_rw
+    output wire       processor_status_register_rw,
     output wire       rw,
     output wire       data_buffer_enable,
     output wire       data_buffer_direction; // 1 for internal, 0 for external
