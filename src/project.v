@@ -2,9 +2,6 @@
  * Copyright (c) 2024 Your Name
  * SPDX-License-Identifier: Apache-2.0
  */
-`include "../src/clock_generator.v"
-`include "../src/instruction_decode.v"
-`include "../src/interrupt_logic.v"
 
 `default_nettype none
 
@@ -19,6 +16,11 @@ module tt_um_6502 (
     input  wire       rst_n     // reset_n - low to reset
 );
 
+  wire [7:0] mem_data_in;
+  wire [7:0] mem_data_out;
+  wire [7:0] mem_addr;
+  wire [7:0] instruction;
+  wire [7:0] processor_status_register;
   wire index_register_y_enable;
   wire index_register_x_enable;
   wire stack_pointer_register_enable;
@@ -26,7 +28,7 @@ module tt_um_6502 (
   wire accumulator_enable;
   wire pc_enable;
   wire input_data_latch_enable;
-  wire rdy = 1;
+  wire rdy;
   wire rw;
   wire dbe;
   wire res_in;
@@ -35,94 +37,40 @@ module tt_um_6502 (
   wire res;
   wire irq;
   wire nmi;
+  wire [7:0] internal_adh;
+  wire [7:0] internal_adl;
+  wire [7:0] data_bus;
+  wire [7:0] internal_data_bus;
   wire clk_cpu;
   wire clk_output;
-  wire [6:0] processor_status_register_enables;
-
-
-  reg [7:0] address_register = 0;
-  reg [7:0] abl;
-  reg [7:0] abh;
-
-  reg [7:0] data_register;
-  wire [7:0] data_flags = 0; //data_flags[0]=RW, 0 is read, 1 is write
-  reg [7:0] data_bus_buffer;
-
-  reg [15:0] pc;
-  reg [7:0] accumulator;
-  reg [7:0] index_register_x;
-  reg [7:0] index_register_y;
-  reg [7:0] instruction_register;
-  reg [6:0] processor_status_register;
 
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
-    instruction_register,
+    instruction,
     processor_status_register,
     clk,
     rw,
-    res,
-    irq,
-    nmi,
-    rdy,
-    processor_status_register_enables,
     input_data_latch_enable,
     pc_enable,
     accumulator_enable,
     alu_enable,
     stack_pointer_register_enable,
     index_register_x_enable,
-    index_register_y_enable
+    index_register_y_enable,
+    res,
+    irq,
+    nmi,
+    rdy
   );
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
 
-
-  always @(posedge clk_output) begin
-    if (rst_n == 0) begin
-      pc <= 0;
-      abl <= 0;
-      abh <= 0;
-      accumulator <= 0;
-      index_register_x <= 0;
-      index_register_y <= 0;
-      instruction_register <= 0;
-      processor_status_register <= 0;
-      if(clk_cpu) begin
-        address_register <= abh; 
-      end else begin
-        address_register <= abl; 
-      end
-    end else begin
-      if(clk_cpu) begin
-        if(data_flags[0]==0) begin
-          data_bus_buffer <= uio_in;
-          instruction_register <= uio_in;
-        end
-        data_register <= data_bus_buffer; 
-
-        //deal with PC stuff
-        pc <= pc + 1;
-        abl <= pc[7:0]+1;
-        abh <= pc[15:8];
-
-        address_register <= abh; 
-      end else begin
-        address_register <= abl; 
-        data_register <= data_flags;
-      end
-    end
-  end
+  // All output pins must be assigned. If not used, assign to 0.
+  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
+  assign uio_out = 0;
+  assign uio_oe  = 0;
 
   // List all unused inputs to prevent warnings
-  assign dbe = 0;
-  assign irq_in = 0;
-  assign nmi_in = 0;
-  assign res_in = 0;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, processor_status_register_enables, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
+  wire _unused = &{ena, clk, rst_n, 1'b0};
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out = address_register;
-  assign uio_out = data_register;
-  assign uio_oe  = 0;
 endmodule

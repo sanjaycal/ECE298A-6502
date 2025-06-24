@@ -6,7 +6,7 @@ module clock_generator (
     output  wire       clk_cpu,
     output  wire       clk_output
 );
-    reg val=0;
+    reg val;
     assign clk_cpu = val;
     assign clk_output = clk;
     
