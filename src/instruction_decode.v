@@ -6,12 +6,18 @@ module instruction_decode (
     input  wire [7:0] instruction,
     input  wire [6:0] processor_status_register,
     input  wire       clk,
-    output  wire       rw,
     input  wire       res,
     input  wire       irq,
     input  wire       nmi,
     input  wire       rdy,
-    output wire [6:0] processor_status_register_enables,      
+    input  wire [6:0] processor_status_register_read,
+    output wire [6:0] processor_status_register_write,        
+    output reg [15:0] memory_address,  // better name for this
+    output wire       address_select,
+    output wire       processor_status_register_rw,
+    output wire       rw,
+    output wire       data_buffer_enable,
+    output wire       data_buffer_direction, // 1 for internal, 0 for external
     output wire       input_data_latch_enable,
     output wire       pc_enable,
     output wire       accumulator_enable,
@@ -35,40 +41,68 @@ reg [7:0] OPCODE;
 
 
 always @(*) begin
+    processor_status_register_write = 1;
+    address_select = 1;
+    processor_status_register_rw = 1;
+    rw = 1
+    data_buffer_enable = 0;
+    data_buffer_direction = 1; 
+    input_data_latch_enable = 0;
+    pc_enable = 0;
+    accumulator_enable = 0;
+    alu_enable = 0;
+    stack_pointer_register_enable = 0;
+    index_register_X_enable = 0;
+    index_register_Y_enable = 0;
+
     case(STATE)
     T_0: begin
         OPCODE = instruction;
-        if((instruction & 8'b00011100) == 8'b000_001_00) begin
+        if((instruction & 8'b00011100) == `ADR_ZPG) begin
             ADDRESSING = `ADR_ZPG;
         end
-
+        pc_enable = 1;   // Increment Program Counter  
+    end
+    T_1: begin
+        if(ADDRESSING == `ADR_ZPG) begin
+            memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
+            address_select = 1;
+        end
+    end
+    T_2: begin
+        if(OPCODE == `OP_ASL_ZPG) begin // replace with a generic condition that enables ALU
+            data_buffer_enable = 1;
+        end    
+    end
+    T_3: begin
+        if(OPCODE == `OP_ASL_ZPG) begin
+            alu_enable  = 1;
+            processor_status_register_rw = 0;
+        end
+    end
+    T_4: begin
+        if(OPCODE == `OP_ASL_ZPG) begin
+            alu_enable = 1;
+            data_buffer_direction = 0;
+            rw = 0;
+        end
     end
     endcase
 end
 
 always @(posedge clk ) begin
-    case(STATE)
-        T_0: STATE <= T_1;
-        T_1: STATE <= T_2;
-        T_2: STATE <= T_3;
-        T_3: STATE <= T_4;
-        T_4: STATE <= T_5;
-        T_5: STATE <= T_6;
-        T_6: STATE <= T_0;
-        default: STATE <= T_0;
-    endcase
+    if(rdy) begin
+        case(STATE) // Most likely state transitions are going to be happening in the 
+                    // combinational block as we add more instructions (state <= next_state)
+        T_0: STATE <= T_1
+        T_1: STATE <= T_2
+        T_2: STATE <= T_3
+        T_3: STATE <= T_4
+        T_4: STATE <= T_5
+        T_5: STATE <= T_6
+        T_6: STATE <= T_0
+        endcase
+    end    
 end
-
-  assign processor_status_register_enables = 0;
-  assign input_data_latch_enable = 0;
-  assign pc_enable = 0;
-  assign accumulator_enable = 0;
-  assign alu_enable = 0;
-  assign stack_pointer_register_enable = 0;
-  assign rw = 0;
-  assign index_register_X_enable = 0;
-  assign index_register_Y_enable = 0;
-
-  wire _unused = &{processor_status_register, res, irq, nmi, rdy, ADDRESSING, OPCODE};
 
 endmodule
