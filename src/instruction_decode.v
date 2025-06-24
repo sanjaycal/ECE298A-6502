@@ -6,7 +6,7 @@ module instruction_decode (
     input  wire [7:0] instruction,
     input  wire [6:0] processor_status_register,
     input  wire       clk,
-    input  wire       rw,
+    output  wire       rw,
     input  wire       res,
     input  wire       irq,
     input  wire       nmi,
@@ -59,7 +59,15 @@ always @(posedge clk ) begin
     endcase
 end
 
+  assign processor_status_register_enables = 0;
+  assign input_data_latch_enable = 0;
+  assign pc_enable = 0;
+  assign accumulator_enable = 0;
+  assign alu_enable = 0;
+  assign stack_pointer_register_enable = 0;
+  assign index_register_X_enable = 0;
+  assign index_register_Y_enable = 0;
 
-  wire _unused = &{processor_status_register, rw,res, irq, nmi, rdy, processor_status_register_enables, input_data_latch_enable, pc_enable, accumulator_enable, alu_enable, stack_pointer_register_enable, index_register_X_enable, index_register_Y_enable, ADDRESSING, OPCODE};
+  wire _unused = &{processor_status_register, rw,res, irq, nmi, rdy, ADDRESSING, OPCODE};
 
 endmodule

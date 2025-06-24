@@ -14,4 +14,6 @@ module interrupt_logic (
     assign irq_out = irq_in;
     assign nmi_out = nmi_in;
 
+    wire _unused = &{clk};
+
 endmodule
