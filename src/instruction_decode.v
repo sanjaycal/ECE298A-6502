@@ -17,7 +17,7 @@ module instruction_decode (
     output wire       processor_status_register_rw,
     output wire       rw,
     output wire       data_buffer_enable,
-    output wire       data_buffer_direction; // 1 for internal, 0 for external
+    output wire       data_buffer_direction, // 1 for internal, 0 for external
     output wire       input_data_latch_enable,
     output wire       pc_enable,
     output wire       accumulator_enable,
