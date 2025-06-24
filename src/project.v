@@ -91,33 +91,42 @@ module tt_um_6502 (
 
   always @(posedge clk_output) begin
     if (rst_n == 0) begin
-      pc <= 0;
-      abl <= 0;
-      abh <= 0;
-      accumulator <= 0;
-      index_register_x <= 0;
-      index_register_y <= 0;
-      instruction_register <= 0;
-      processor_status_register <= 0;
+      pc = 0;
+      abl = 0;
+      abh = 0;
+      accumulator = 0;
+      index_register_x = 0;
+      index_register_y = 0;
+      instruction_register = 0;
+      processor_status_register = 0;
       if(clk_cpu) begin
-        address_register <= abh; 
+        address_register = abh; 
       end else begin
-        address_register <= abl; 
+        address_register = abl; 
       end
     end else begin
       if(clk_cpu) begin
         if(data_flags[0]==0) begin
-          data_bus_buffer <= uio_in;
-          instruction_register <= uio_in;
+          data_bus_buffer = uio_in;
+          instruction_register = uio_in;
         end
-        data_register <= data_bus_buffer; 
+        data_register = data_bus_buffer; 
+
+        if(address_select) begin
+          abl = memory_address[7:0];
+          abh = memory_address[15:8];
+          abl = instruction_register;
+        end
 
         //deal with PC stuff
-        pc <= pc + 1;
-        abl <= pc[7:0]+1;
-        abh <= pc[15:8];
+        if(pc_enable) begin
+          pc = pc + 1;
+          abl = pc[7:0];
+          abh = pc[15:8];
+        end
 
-        address_register <= abh; 
+
+        address_register = abh; 
       end else begin
         address_register <= abl; 
         data_register <= data_flags;

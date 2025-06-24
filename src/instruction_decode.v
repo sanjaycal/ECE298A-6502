@@ -35,7 +35,7 @@ localparam T_4 = 3'd4;
 localparam T_5 = 3'd5;
 localparam T_6 = 3'd6;
 
-reg [2:0] STATE;
+reg [2:0] STATE = 0;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
@@ -54,6 +54,7 @@ always @(*) begin
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
+    memory_address = 0;
 
     case(STATE)
     T_0: begin
@@ -65,7 +66,7 @@ always @(*) begin
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
-            memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
+            memory_address = {8'b00000011, instruction}; // Puts the memory address read in adh/adl
             address_select = 1;
         end
     end

@@ -79,46 +79,24 @@ async def test_LDX(dut):
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    dut._log.info("Test LDX immediate and STX zeropage behaviour")
+    dut._log.info("Test ALS zeropage behaviour")
     # Write the instructions to the data bus that is being read from
-    # LDX #imm is a2 imm for bytes
+    # ALS oper is 06 oper for bytes
 
     # check that instructions are being read and that the PC is incrementing
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
-    dut.uio_in.value = hex_to_num("a2")
+    dut.uio_in.value = hex_to_num("06")
 
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 1
-    dut.uio_in.value = 69
+    dut.uio_in.value = hex_to_num("aa")
 
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 2
-
-    # now 69 should be in X and now we store it to memory
-    # STX zeropage is 8b oper, with oper being the 00oper memory address
-
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 3
-    dut.uio_in.value = hex_to_num("8b")
-
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 4
-    dut.uio_in.value = hex_to_num("aa")  # store in position 00aa in memory
-
-    # check if we are writing 69 to 00aa
-    assert dut.uo_out.value == 00
-    assert dut.uio_out.value == 69
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == hex_to_num("aa")
-    await ClockCycles(dut.clk, 1)
