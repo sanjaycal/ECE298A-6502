@@ -41,6 +41,7 @@ always @(*) begin
         if((instruction & 8'b00011100) == 8'b000_001_00) begin
             ADDRESSING = `ADR_ZPG;
         end
+
     end
     endcase
 end

@@ -44,8 +44,15 @@ module tt_um_6502 (
   wire [6:0] processor_status_register_enables;
 
 
-  reg [7:0] pch;
-  reg [7:0] pcl;
+  reg [7:0] address_register = 0;
+  reg [7:0] abl;
+  reg [7:0] abh;
+
+  reg [7:0] data_register;
+  wire [7:0] data_flags = 0; //data_flags[0]=RW, 0 is read, 1 is write
+  reg [7:0] data_bus_buffer;
+
+  reg [15:0] pc;
   reg [7:0] accumulator;
   reg [7:0] stack_point_register;
   reg [7:0] index_register_x;
@@ -75,12 +82,49 @@ module tt_um_6502 (
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+
+  always @(posedge clk_output) begin
+    if (rst_n == 0) begin
+      pc <= 0;
+      abl <= 0;
+      abh <= 0;
+      accumulator <= 0;
+      stack_point_register <= 0;
+      index_register_x <= 0;
+      index_register_y <= 0;
+      instruction_register <= 0;
+      processor_status_register <= 0;
+      if(clk_cpu) begin
+        address_register <= abh; 
+      end else begin
+        address_register <= abl; 
+      end
+    end else begin
+      if(clk_cpu) begin
+        if(data_flags[0]==0) begin
+          data_bus_buffer <= uio_in;
+          instruction_register <= uio_in;
+        end
+        data_register <= data_bus_buffer; 
+
+        //deal with PC stuff
+        pc <= pc + 1;
+        abl <= pc[7:0]+1;
+        abh <= pc[15:8];
+
+        address_register <= abh; 
+      end else begin
+        address_register <= abl; 
+        data_register <= data_flags;
+      end
+    end
+  end
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, 1'b0};
 
+  // All output pins must be assigned. If not used, assign to 0.
+  assign uo_out = address_register;
+  assign uio_out = data_register;
+  assign uio_oe  = 0;
 endmodule
