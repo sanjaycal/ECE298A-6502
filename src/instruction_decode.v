@@ -48,14 +48,14 @@ end
 
 always @(posedge clk ) begin
     case(STATE)
-    T_0: STATE <= T_1;
-    T_1: STATE <= T_2;
-    T_2: STATE <= T_3;
-    T_3: STATE <= T_4;
-    T_4: STATE <= T_5;
-    T_5: STATE <= T_6;
-    T_6: STATE <= T_0;
-    default: STATE <= T_0;
+        T_0: STATE <= T_1;
+        T_1: STATE <= T_2;
+        T_2: STATE <= T_3;
+        T_3: STATE <= T_4;
+        T_4: STATE <= T_5;
+        T_5: STATE <= T_6;
+        T_6: STATE <= T_0;
+        default: STATE <= T_0;
     endcase
 end
 

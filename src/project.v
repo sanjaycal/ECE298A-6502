@@ -50,7 +50,6 @@ module tt_um_6502 (
 
   reg [15:0] pc;
   reg [7:0] accumulator;
-  reg [7:0] stack_point_register;
   reg [7:0] index_register_x;
   reg [7:0] index_register_y;
   reg [7:0] instruction_register;
@@ -85,7 +84,6 @@ module tt_um_6502 (
       abl <= 0;
       abh <= 0;
       accumulator <= 0;
-      stack_point_register <= 0;
       index_register_x <= 0;
       index_register_y <= 0;
       instruction_register <= 0;
@@ -120,7 +118,7 @@ module tt_um_6502 (
   assign dbe = 0;
   assign irq_in = 0;
   assign nmi_in = 0;
-  wire _un2 = &{stack_point_register};
+  assign res_in = 0;
   wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, processor_status_register_enables, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
 
   // All output pins must be assigned. If not used, assign to 0.
