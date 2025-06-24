@@ -108,8 +108,8 @@ module tt_um_6502 (
       if(clk_cpu) begin
         if(data_flags[0]==0) begin
           data_bus_buffer = uio_in;
-          instruction_register = uio_in;
         end
+        instruction_register = uio_in;
         data_register = data_bus_buffer; 
 
         if(address_select) begin
@@ -128,8 +128,8 @@ module tt_um_6502 (
 
         address_register = abh; 
       end else begin
-        address_register <= abl; 
-        data_register <= data_flags;
+        address_register = abl; 
+        data_register = data_flags;
       end
     end
   end

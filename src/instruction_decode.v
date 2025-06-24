@@ -66,7 +66,7 @@ always @(*) begin
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
-            memory_address = {8'b00000011, instruction}; // Puts the memory address read in adh/adl
+            memory_address = {8'b00000000, instruction}; // Puts the memory address read in adh/adl
             address_select = 1;
         end
     end
