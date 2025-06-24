@@ -58,4 +58,8 @@ always @(posedge clk ) begin
     default: STATE <= T_0;
     endcase
 end
+
+
+  wire _unused = &{processor_status_register, rw,res, irq, nmi, rdy, processor_status_register_enables, input_data_latch_enable, pc_enable, accumulator_enable, alu_enable, stack_pointer_register_enable, index_register_X_enable, index_register_Y_enable, ADDRESSING, OPCODE};
+
 endmodule
