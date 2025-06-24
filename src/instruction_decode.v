@@ -66,18 +66,18 @@ always @(*) begin
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
-            memory_address = {8'b00000000, instruction}; // Puts the memory address read in adh/adl
+            memory_address = instruction; // Puts the memory address read in adh/adl
             address_select = 1;
         end
     end
     T_2: begin
-        if(OPCODE == `OP_ASL_ZPG) begin // replace with a generic condition that enables ALU
+        if(OPCODE == `OP_ASL_ZPG) begin 
             data_buffer_enable = 1;
         end    
     end
     T_3: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  = 1;
+            alu_enable  = 1;// replace with a generic condition that enables ALU
             processor_status_register_rw = 0;
         end
     end

@@ -63,7 +63,7 @@ async def test_project(dut):
 
 
 @cocotb.test()
-async def test_LDX(dut):
+async def test_ASL_ZPG(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
@@ -84,20 +84,20 @@ async def test_LDX(dut):
     # ASL oper is 06 oper
 
     # check that instructions are being read and that the PC is incrementing
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0
     dut.uio_in.value = hex_to_num("06")
-
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 1
 
     dut.uio_in.value = hex_to_num("66")
-
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == hex_to_num("66")
+
+    dut.uio_in.value = 69
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 69
