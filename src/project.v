@@ -99,23 +99,14 @@ module tt_um_6502 (
       index_register_y = 0;
       instruction_register = 0;
       processor_status_register = 0;
-      if(clk_cpu) begin
-        address_register = abh; 
-      end else begin
-        address_register = abl; 
-      end
     end else begin
       if(clk_cpu) begin
-        if(data_flags[0]==0) begin
-          data_bus_buffer = uio_in;
-        end
         instruction_register = uio_in;
         data_register = data_bus_buffer; 
 
         if(address_select) begin
           abl = memory_address[7:0];
           abh = memory_address[15:8];
-          abl = instruction_register;
         end
 
         //deal with PC stuff
@@ -125,11 +116,8 @@ module tt_um_6502 (
           abh = pc[15:8];
         end
 
-
-        address_register = abh; 
       end else begin
-        address_register = abl; 
-        data_register = data_flags;
+        data_register <= data_flags;
       end
     end
   end
@@ -143,7 +131,7 @@ module tt_um_6502 (
   wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write, memory_address, rw};
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out = address_register;
+  assign uo_out = clk_cpu?abl:abh;
   assign uio_out = data_register;
   assign uio_oe  = 0;
 endmodule

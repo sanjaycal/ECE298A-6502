@@ -79,9 +79,9 @@ async def test_LDX(dut):
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    dut._log.info("Test ALS zeropage behaviour")
+    dut._log.info("Test ASL zeropage behaviour")
     # Write the instructions to the data bus that is being read from
-    # ALS oper is 06 oper for bytes
+    # ASL oper is 06 oper
 
     # check that instructions are being read and that the PC is incrementing
     await ClockCycles(dut.clk, 1)
@@ -94,9 +94,10 @@ async def test_LDX(dut):
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 1
-    dut.uio_in.value = hex_to_num("aa")
+
+    dut.uio_in.value = hex_to_num("66")
 
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == hex_to_num("aa")
+    assert dut.uo_out.value == hex_to_num("66")
