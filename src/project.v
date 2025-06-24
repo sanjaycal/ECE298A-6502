@@ -2,6 +2,8 @@
  * Copyright (c) 2024 Your Name
  * SPDX-License-Identifier: Apache-2.0
  */
+`include "../src/clock_generator.v"
+`include "../src/instruction_decode.v"
 
 `default_nettype none
 
