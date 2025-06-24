@@ -3,8 +3,8 @@
 
     //OPCODE
 
-    `define OP_ALS 8'b000xxx10
-    `define OP_ALS_ZPG 8'b00000110
+    `define OP_ASL 8'b000xxx10
+    `define OP_ASL_ZPG 8'b00000110
 
     // ADDRESSING
     `define ADR_ZPG 3'b001
