@@ -8,8 +8,13 @@ space was not as advanced and explored; for instance, modern CPUs do not use mul
 Thus, we decided to make some educated guesses and edits to 'improve' the design for our use cases.
 That said, we do intend for our 6502 to remain relatively authentic.
 
-Changes Made:
-    - Internal Data Bus 8 Bit Line to Data Bus Buffer is now bidirectional
+Notation:
+-> is a 1 bit line,
+=> is a 8 bit bus
+
+Changes to Base Design Made:
+    - INTERNAL DATA BUS=>DATA BUS BUFFER is now bidirectional
     - Created ADDR SELECT, a mux that selects between 16 bit input from Program counter and 16 bit input from
       Instruction Decode
-        - Added a 16 bit bus from Instruction Decode to 
+        - Added a 2 8 bit busses INSTRUCTION DECODE=>ADDR SELECT
+        - Set the 8 bit bus PCL=>ADL to PCL=>ADDR SELECT 
