@@ -44,23 +44,26 @@ module tt_um_6502 (
   wire clk_cpu;
   wire clk_output;
 
+  wire [6:0] processor_status_register_enables;
+
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
     instruction,
     processor_status_register,
     clk,
     rw,
+    res,
+    irq,
+    nmi,
+    rdy,
+    processor_status_register_enables,
     input_data_latch_enable,
     pc_enable,
     accumulator_enable,
     alu_enable,
     stack_pointer_register_enable,
     index_register_x_enable,
-    index_register_y_enable,
-    res,
-    irq,
-    nmi,
-    rdy
+    index_register_y_enable
   );
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
