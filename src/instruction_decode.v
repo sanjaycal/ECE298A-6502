@@ -58,30 +58,30 @@ always @(*) begin
     case(STATE)
     T_0: begin
         OPCODE = instruction;
-        if((instruction & 8'b00011100) == ADR_ZPG) begin
-            ADDRESSING = ADR_ZPG;
+        if((instruction & 8'b00011100) == `ADR_ZPG) begin
+            ADDRESSING = `ADR_ZPG;
         end
         pc_enable = 1;   // Increment Program Counter  
     end
     T_1: begin
-        if(ADDRESSING == ADR_ZPG) begin
+        if(ADDRESSING == `ADR_ZPG) begin
             memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
             address_select = 1;
         end
     end
     T_2: begin
-        if(OPCODE == OP_ASL_ZPG) begin // replace with a generic condition that enables ALU
+        if(OPCODE == `OP_ASL_ZPG) begin // replace with a generic condition that enables ALU
             data_buffer_enable = 1;
         end    
     end
     T_3: begin
-        if(OPCODE == OP_ASL_ZPG) begin
+        if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable  = 1;
             processor_status_register_rw = 0;
         end
     end
     T_4: begin
-        if(OPCODE == OP_ASL_ZPG) begin
+        if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable = 1;
             data_buffer_direction = 0;
             rw = 0;
