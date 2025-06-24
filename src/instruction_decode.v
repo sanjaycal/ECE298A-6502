@@ -1,4 +1,4 @@
-`include "../inc/opcode.vh"
+//`include "../inc/opcode.vh"
 `include "../inc/status_register.vh"
 `default_nettype none
 
@@ -38,8 +38,8 @@ always @(*) begin
     case(STATE)
     T_0: begin
         OPCODE = instruction;
-        if((instruction & 8'b00011100) == ADR_ZPG) begin
-            ADDRESSING = ADR_ZPG;
+        if((instruction & 8'b00011100) == 8'b000_001_00) begin
+            ADDRESSING = 3'b001;
         end
     end
     endcase

@@ -19,8 +19,6 @@ module tt_um_6502 (
   wire [7:0] mem_data_in;
   wire [7:0] mem_data_out;
   wire [7:0] mem_addr;
-  wire [7:0] instruction;
-  wire [7:0] processor_status_register;
   wire index_register_y_enable;
   wire index_register_x_enable;
   wire stack_pointer_register_enable;
@@ -43,12 +41,21 @@ module tt_um_6502 (
   wire [7:0] internal_data_bus;
   wire clk_cpu;
   wire clk_output;
-
   wire [6:0] processor_status_register_enables;
+
+
+  reg [7:0] pch;
+  reg [7:0] pcl;
+  reg [7:0] accumulator;
+  reg [7:0] stack_point_register;
+  reg [7:0] index_register_x;
+  reg [7:0] index_register_y;
+  reg [7:0] instruction_register;
+  reg [6:0] processor_status_register;
 
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
-    instruction,
+    instruction_register,
     processor_status_register,
     clk,
     rw,
