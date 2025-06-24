@@ -117,6 +117,10 @@ module tt_um_6502 (
   end
 
   // List all unused inputs to prevent warnings
+  assign dbe = 0;
+  assign irq_in = 0;
+  assign nmi_in = 0;
+  wire _un2 = &{stack_point_register};
   wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, rdy, rw, dbe, res_in, irq_in, nmi_in, processor_status_register_enables, accumulator, index_register_x, index_register_y, stack_pointer_register_enable};
 
   // All output pins must be assigned. If not used, assign to 0.

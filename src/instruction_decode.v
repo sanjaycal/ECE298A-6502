@@ -65,9 +65,10 @@ end
   assign accumulator_enable = 0;
   assign alu_enable = 0;
   assign stack_pointer_register_enable = 0;
+  assign rw = 0;
   assign index_register_X_enable = 0;
   assign index_register_Y_enable = 0;
 
-  wire _unused = &{processor_status_register, rw,res, irq, nmi, rdy, ADDRESSING, OPCODE};
+  wire _unused = &{processor_status_register, res, irq, nmi, rdy, ADDRESSING, OPCODE};
 
 endmodule
