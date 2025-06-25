@@ -136,7 +136,7 @@ module tt_um_6502 (
   assign nmi_in = 0;
   assign res_in = 0;
   assign processor_status_register_read = processor_status_register;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, alu_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write, rw};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write, rw};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
