@@ -65,6 +65,7 @@ module tt_um_6502 (
   reg [7:0] ALU_inputB;
 
   reg [7:0] ALU_output;
+  wire [7:0] ALU_flags_output;
 
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
@@ -95,7 +96,8 @@ module tt_um_6502 (
     alu_op,
     ALU_inputA,
     ALU_inputB,
-    ALU_output
+    ALU_output,
+    ALU_flags_output
   );
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);

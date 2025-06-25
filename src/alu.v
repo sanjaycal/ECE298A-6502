@@ -8,7 +8,7 @@ module alu (
     input  wire [7:0]   inputA,
     input  wire [7:0]   inputB,
     output wire [7:0]   ALU_output,
-    output wire [7:0]   ALU_flags_output,
+    output wire [7:0]   ALU_flags_output
 );
 
     reg [7:0] ALU_buffer = 0;
@@ -17,12 +17,12 @@ module alu (
     always @(*) begin
         ALU_buffer = 0;
         case(alu_op)
-            `ASL: 
+            `ASL: begin
                 ALU_flags_buffer[`CARRY_FLAG] = inputA[7];
-                ALU_flags_buffer[`ZERO_FLAG] = ~|inputA;
+                ALU_flags_buffer[`ZERO_FLAG] = 0; //TODO FIX THIS
                 ALU_flags_buffer[`NEGATIVE_FLAG] = inputA[6];
-
                 ALU_buffer = inputA << 1;
+            end
             default: ALU_buffer = 0;
         endcase
     end
