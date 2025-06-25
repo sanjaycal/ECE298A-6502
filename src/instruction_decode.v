@@ -17,7 +17,7 @@ module instruction_decode (
     output reg [15:0] memory_address,  // better name for this
     output reg       address_select,
     output reg       processor_status_register_rw,
-    output reg       rw,
+    output reg       rw, //1 for read, 0 for write
     output reg       data_buffer_enable,
     output reg       data_buffer_direction, // 1 for internal, 0 for external
     output reg       input_data_latch_enable,
@@ -74,6 +74,7 @@ always @(*) begin
     end
     T_2: begin
         if(OPCODE == `OP_ASL_ZPG) begin 
+            data_buffer_direction = 1; //read from memory
             data_buffer_enable = 1;
         end    
     end
@@ -87,7 +88,8 @@ always @(*) begin
     T_4: begin
         if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable = `ASL;
-            data_buffer_direction = 0;
+            data_buffer_enable = 1;
+            data_buffer_direction = 0; //write to memory
             rw = 0;
         end
     end

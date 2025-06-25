@@ -88,16 +88,37 @@ async def test_ASL_ZPG(dut):
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
+    assert dut.uio_out.value == 1  # last bit should be 1 for read
     assert dut.uo_out.value == 1
 
+    # tell it to read from memory address 0x0066
     dut.uio_in.value = hex_to_num("66")
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
+    assert dut.uio_out.value == 1  # last bit should be 1 for read
     assert dut.uo_out.value == hex_to_num("66")
 
+    # when it tries to read from 0x0066 it should get 69 as the value
     dut.uio_in.value = 69
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0  # this shouldn't change though
+    await ClockCycles(dut.clk, 1)
+    # we arent trying to read at this time, so it doesnt matter
+
+    # now we write from the ALU to the data bus buffer
+    dut.uio_in.value = hex_to_num("00")
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 69
+    # we arent trying to read at this time, so it doesnt matter
+
+    # now we output 34(currently in the data buffer) to 0x066
+    dut.uio_in.value = hex_to_num("00")
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0  # check if we're outputting to 0x0066
+    assert dut.uio_out.value == 34  # check the output
+    assert dut.uio_oe.value == hex_to_num("ff")  # check if we are otuputting
+    await ClockCycles(dut.clk, 1)
+    assert dut.uio_out.value == 0  # last bit should be 0 for write
+    assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066

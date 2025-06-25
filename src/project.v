@@ -143,5 +143,5 @@ module tt_um_6502 (
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
   assign uio_out = clk_cpu?data_flags:data_bus_buffer;
-  assign uio_oe  = 0;
+  assign uio_oe  = clk_cpu?8'h1:8'h0;
 endmodule
