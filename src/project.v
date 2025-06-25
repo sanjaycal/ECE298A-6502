@@ -5,6 +5,7 @@
 `include "../src/clock_generator.v"
 `include "../src/instruction_decode.v"
 `include "../src/interrupt_logic.v"
+`include "../src/alu.v"
 
 `default_nettype none
 
@@ -22,7 +23,7 @@ module tt_um_6502 (
   wire index_register_y_enable;
   wire index_register_x_enable;
   wire stack_pointer_register_enable;
-  wire alu_enable;
+  wire [2:0] alu_op;
   wire accumulator_enable;
   wire pc_enable;
   wire input_data_latch_enable;
@@ -60,6 +61,11 @@ module tt_um_6502 (
   reg [7:0] instruction_register;
   reg [6:0] processor_status_register;
 
+  reg [7:0] ALU_inputA;
+  reg [7:0] ALU_inputB;
+
+  reg [7:0] ALU_output;
+
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
     instruction_register,
@@ -79,10 +85,17 @@ module tt_um_6502 (
     input_data_latch_enable,
     pc_enable,
     accumulator_enable,
-    alu_enable,
+    alu_op,
     stack_pointer_register_enable,
     index_register_x_enable,
     index_register_y_enable
+  );
+  
+  alu ALU(
+    alu_op,
+    ALU_inputA,
+    ALU_inputB,
+    ALU_output
   );
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);

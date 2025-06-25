@@ -1,6 +1,8 @@
 `include "../inc/opcode.vh"
 `include "../inc/status_register.vh"
 
+`include "../inc/alu_ops.vh"
+
 `default_nettype none
 
 module instruction_decode (
@@ -21,7 +23,7 @@ module instruction_decode (
     output reg       input_data_latch_enable,
     output reg       pc_enable,
     output reg       accumulator_enable,
-    output reg       alu_enable,
+    output reg [2:0] alu_enable,
     output reg       stack_pointer_register_enable,
     output reg       index_register_X_enable,
     output reg       index_register_Y_enable
@@ -50,7 +52,7 @@ always @(*) begin
     input_data_latch_enable = 0;
     pc_enable = 0;
     accumulator_enable = 0;
-    alu_enable = 0;
+    alu_enable = NOP;
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
@@ -77,13 +79,14 @@ always @(*) begin
     end
     T_3: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  = 1;// replace with a generic condition that enables ALU
+            alu_enable  = ASL;// replace with a generic condition that enables ALU
             processor_status_register_rw = 0;
+
         end
     end
     T_4: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable = 1;
+            alu_enable = ASL;
             data_buffer_direction = 0;
             rw = 0;
         end
