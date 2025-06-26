@@ -21,9 +21,9 @@ module instruction_decode (
     output reg [1:0] data_buffer_enable, // 00 IDLE, 01 LOAD, 10 STORE
     output reg [1:0] input_data_latch_enable, // 00 IDLE, 01 LOAD, 10 STORE
     output reg       pc_enable,
-    output reg [2:0] accumulator_enable, // BIT 2 is enable, BIT 1 is R/W_n and BIT 0 is BUS SELECT
-    output reg [2:0] alu_enable,         // 0 is light blue and 1 is dark blue.
-    output reg [2:0] stack_pointer_register_enable,
+    output reg [2:0] alu_enable,
+    output reg [2:0] accumulator_enable, // BIT 2 is enable, BIT 1 is R/W_n and BIT 0 is BUS SELECT         
+    output reg [2:0] stack_pointer_register_enable, // 0 is light blue and 1 is dark blue.
     output reg [2:0] index_register_X_enable,
     output reg [2:0] index_register_Y_enable
 );
@@ -31,18 +31,18 @@ module instruction_decode (
 localparam S_IDLE           = 3'd0;
 localparam S_OPCODE_READ    = 3'd1;
 localparam S_ZPG_ADR_READ   = 3'd2;
-localparam S_IDL_WRITE = 3'd3;
-localparam S_ALU_ZPG = 3'd4;
-localparam S_DBUF_OUTPUT = 3'd5;
-localparam T_6 = 3'd6;
+localparam S_IDL_WRITE      = 3'd3;
+localparam S_ALU_ZPG        = 3'd4;
+localparam S_DBUF_OUTPUT    = 3'd5;
+localparam T_6              = 3'd6;
 
 //CONSTANTS
 localparam BUF_IDLE_TWO     = 2'b00;
 localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
 localparam BUF_STORE_TWO    = 2'b10; // Put the register value on a BUS
 
-reg [4:0] STATE = 0;
-reg [4:0] NEXT_STATE = 0;
+reg [4:0] STATE      = S_IDLE;
+reg [4:0] NEXT_STATE = S_IDLE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
@@ -50,8 +50,8 @@ reg [7:0] OPCODE;
 always @(*) begin
     NEXT_STATE = STATE;
 
-    processor_status_register_write = 1;
-    address_select = 1;
+    processor_status_register_write = 7'b0;
+    address_select = 1'b0;
     processor_status_register_rw = 1;
     rw = 1;
     data_buffer_enable = BUF_IDLE_TWO;
@@ -68,18 +68,16 @@ always @(*) begin
         NEXT_STATE = S_OPCODE_READ;
     end
     S_OPCODE_READ: begin
-        OPCODE = instruction;
-        if(OPCODE[4:2] == `ADR_ZPG) begin
-            ADDRESSING = `ADR_ZPG;
+        // In this state, we just need to increment the PC and decide where to go next.
+        // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
+        pc_enable = 1;   // Increment Program Counter
+        if(instruction[4:2] == `ADR_ZPG) begin
             NEXT_STATE = S_ZPG_ADR_READ;
-        end
-        else if(OPCODE[4:2] == `ADR_ABS) begin
-            ADDRESSING = `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
-        end
-        else if(OPCODE == `ADR_A) begin
-            ADDRESSING = `ADR_A;
-        end
-        pc_enable = 1;   // Increment Program Counter  
+        end else if(instruction[4:2] == `ADR_ABS) begin
+            NEXT_STATE = S_IDLE;
+        end else if(instruction == `ADR_A) begin
+            NEXT_STATE = S_IDLE;
+        end  
     end
     S_ZPG_ADR_READ: begin
         memory_address = {8'h00,instruction}; // Puts the memory address read in adh/adl
@@ -96,27 +94,43 @@ always @(*) begin
     end
     S_ALU_ZPG: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-             alu_enable  = `ASL;
-               input_data_latch_enable = BUF_STORE_TWO;
-              data_buffer_enable = BUF_LOAD_TWO;
+            alu_enable  = `ASL;
+            input_data_latch_enable = BUF_STORE_TWO;
+            data_buffer_enable = BUF_LOAD_TWO;
             processor_status_register_rw = 0;
+            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
             NEXT_STATE = S_DBUF_OUTPUT;
         end
     end
      S_DBUF_OUTPUT: begin
-           data_buffer_enable = BUF_STORE_TWO;
-          rw = 0;
+        data_buffer_enable = BUF_STORE_TWO;
+        rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
+    default: NEXT_STATE = S_IDLE;
     endcase
 end
 
 always @(posedge clk ) begin
-    if(rdy) begin
+    if(res) begin
+        STATE <= S_IDLE;
+        OPCODE <= `OP_NOP;
+        ADDRESSING <= 3'b000;
+    end else if(rdy) begin
         STATE <= NEXT_STATE;
+        if(STATE == S_OPCODE_READ) begin
+             OPCODE <= instruction;
+            if(instruction[4:2] == `ADR_ZPG) begin
+                ADDRESSING <= `ADR_ZPG;
+            end else if(instruction[4:2] == `ADR_ABS) begin
+                ADDRESSING <= `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
+            end else if(instruction == `ADR_A) begin
+                ADDRESSING <= `ADR_A;
+            end
+        end
     end
 end
 
-wire _unused = &{res, irq, nmi, processor_status_register_read };
+wire _unused = &{irq, nmi, processor_status_register_read };
 
 endmodule
