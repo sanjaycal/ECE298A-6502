@@ -79,10 +79,10 @@ always @(*) begin
         pc_enable = 1;   // Increment Program Counter  
     end
     S_ZPG_ADR_READ: begin
-        memory_address = instruction; // Puts the memory address read in adh/adl
+        memory_address = {8'h00,instruction}; // Puts the memory address read in adh/adl
         address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
-            NEXT_STATE = S_DBUF_WRITE_EXT;
+            NEXT_STATE = S_IDL_WRITE;
         end
     end
     S_IDL_WRITE: begin
