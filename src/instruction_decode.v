@@ -18,9 +18,8 @@ module instruction_decode (
     output reg       address_select,
     output reg       processor_status_register_rw,
     output reg       rw, //1 for read, 0 for write
-    output reg       data_buffer_enable,
-    output reg       data_buffer_direction, // 1 for internal, 0 for external
-    output reg       input_data_latch_enable,
+    output reg [1:0] data_buffer_enable, // 00 IDLE, 01 STORE, 02 LOAD
+    output reg [1:0] input_data_latch_enable, // ^
     output reg       pc_enable,
     output reg       accumulator_enable,
     output reg [2:0] alu_enable,
@@ -29,27 +28,29 @@ module instruction_decode (
     output reg       index_register_Y_enable
 );
 
-localparam T_0 = 3'd0;
-localparam T_1 = 3'd1;
-localparam T_2 = 3'd2;
-localparam T_3 = 3'd3;
-localparam T_4 = 3'd4;
-localparam T_5 = 3'd5;
+localparam S_IDLE           = 3'd0;
+localparam S_OPCODE_READ    = 3'd1;
+localparam S_ZPG_ADR_READ   = 3'd2;
+localparam S_IDL_WRITE = 3'd3;
+localparam S_ALU_ZPG = 3'd4;
+localparam S_DBUF_OUTPUT = 3'd5;
 localparam T_6 = 3'd6;
 
-reg [2:0] STATE = 0;
+reg [4:0] STATE = 0;
+reg [4:0] NEXT_STATE = 0;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
 always @(*) begin
+    NEXT_STATE = STATE;
+
     processor_status_register_write = 1;
     address_select = 1;
     processor_status_register_rw = 1;
     rw = 1;
-    data_buffer_enable = 0;
-    data_buffer_direction = 1; 
-    input_data_latch_enable = 0;
+    data_buffer_enable = 2'b00;
+    input_data_latch_enable = 2'b00;
     pc_enable = 0;
     accumulator_enable = 0;
     alu_enable = `NOP;
@@ -57,57 +58,59 @@ always @(*) begin
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
     memory_address = 0;
-
     case(STATE)
-    T_0: begin
+    S_IDLE: begin
+        NEXT_STATE = S_OPCODE_READ;
+    end
+    S_OPCODE_READ: begin
         OPCODE = instruction;
-        if((instruction & 8'b00011100) == {3'b000,`ADR_ZPG,2'b00}) begin
+        case(OPCODE)
+        (OPCODE[4:2] == `ADR_ZPG): begin
             ADDRESSING = `ADR_ZPG;
+            NEXT_STATE = S_ZPG_ADR_READ;
         end
+        (OPCODE[4:2] == `ADR_ABS): begin
+            ADDRESSING = `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
+        end
+        (OPCODE == `ADR_A): begin
+            ADDRESSING = `ADR_A;
+        end
+        endcase
         pc_enable = 1;   // Increment Program Counter  
     end
-    T_1: begin
+    S_ZPG_ADR_READ: begin
+        memory_address = instruction; // Puts the memory address read in adh/adl
+        address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
-            memory_address = instruction; // Puts the memory address read in adh/adl
-            address_select = 1;
+            NEXT_STATE = S_DBUF_WRITE_EXT;
         end
     end
-    T_2: begin
-        if(OPCODE == `OP_ASL_ZPG) begin 
-            data_buffer_direction = 1; //read from memory
-            data_buffer_enable = 1;
+    S_IDL_WRITE: begin
+        input_data_latch_enable = 2'b01;
+        if(OPCODE == `OP_ASL_ZPG) begin
+            NEXT_STATE = S_ALU_ZPG;
         end    
     end
-    T_3: begin
+    S_ALU_ZPG: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  = `ASL;// replace with a generic condition that enables ALU
+            alu_enable  = `ASL;
+            input_data_latch_enable = 2'b10;
+            data_buffer_enable = 2'b01;
             processor_status_register_rw = 0;
-
+            NEXT_STATE = S_DBUF_OUTPUT;
         end
     end
-    T_4: begin
-        if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable = `ASL;
-            data_buffer_enable = 1;
-            data_buffer_direction = 0; //write to memory
-            rw = 0;
-        end
+    S_DBUF_OUTPUT: begin
+        data_buffer_enable = 2'b10;
+        rw = 0;
+        NEXT_STATE = S_OPCODE_READ;
     end
     endcase
 end
 
 always @(posedge clk ) begin
     if(rdy) begin
-        case(STATE) // Most likely state transitions are going to be happening in the 
-                    // combinational block as we add more instructions (state <= next_state)
-        T_0: STATE <= T_1;
-        T_1: STATE <= T_2;
-        T_2: STATE <= T_3;
-        T_3: STATE <= T_4;
-        T_4: STATE <= T_5;
-        T_5: STATE <= T_6;
-        T_6: STATE <= T_0;
-        endcase
+        STATE <= NEXT_STATE;
     end    
 end
 
