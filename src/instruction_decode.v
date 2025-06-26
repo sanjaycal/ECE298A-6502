@@ -37,9 +37,9 @@ localparam S_DBUF_OUTPUT = 3'd5;
 localparam T_6 = 3'd6;
 
 //CONSTANTS
-localparam 2_BUF_IDE    = 2'b00;
-localparam 2_BUF_LOAD   = 2'b01; // Take from a BUS and keep
-localparam 2_BUF_STORE  = 2'b10 // Put the register value on a BUS
+localparam BUF_IDLE_TWO     = 2'b00;
+localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
+localparam BUF_STORE_TWO    = 2'b10 // Put the register value on a BUS
 
 reg [4:0] STATE = 0;
 reg [4:0] NEXT_STATE = 0;
@@ -54,8 +54,8 @@ always @(*) begin
     address_select = 1;
     processor_status_register_rw = 1;
     rw = 1;
-    data_buffer_enable = 2_BUF_IDE;
-    input_data_latch_enable = 2_BUF_IDE;
+    data_buffer_enable = BUF_IDLE_TWO;
+    input_data_latch_enable = BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = 0;
     alu_enable = `NOP;
@@ -89,23 +89,23 @@ always @(*) begin
         end
     end
     S_IDL_WRITE: begin
-        input_data_latch_enable = 2_BUF_LOAD;
+        input_data_latch_enable = BUF_LOAD_TWO;
         if(OPCODE == `OP_ASL_ZPG) begin
             NEXT_STATE = S_ALU_ZPG;
         end    
     end
     S_ALU_ZPG: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  = `ASL;
-            input_data_latch_enable = 2_BUF_STORE;
-            data_buffer_enable = 2_BUF_LOAD;
+             alu_enable  = `ASL;
+               input_data_latch_enable = BUF_STORE_TWO;
+              data_buffer_enable = BUF_LOAD_TWO;
             processor_status_register_rw = 0;
             NEXT_STATE = S_DBUF_OUTPUT;
         end
     end
-    S_DBUF_OUTPUT: begin
-        data_buffer_enable = 2_BUF_STORE;
-        rw = 0;
+     S_DBUF_OUTPUT: begin
+           data_buffer_enable = BUF_STORE_TWO;
+          rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
     endcase
