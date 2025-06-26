@@ -58,7 +58,7 @@ module tt_um_6502 (
   reg [7:0] accumulator;
   reg [7:0] index_register_x;
   reg [7:0] index_register_y;
-  reg [7:0] instruction_register;
+  wire [7:0] instruction_register;
   reg [6:0] processor_status_register;
 
   reg [7:0] ALU_inputA;
@@ -110,15 +110,12 @@ module tt_um_6502 (
       accumulator = 0;
       index_register_x = 0;
       index_register_y = 0;
-      instruction_register = 0;
       processor_status_register = 0;
     end else begin
-      instruction_register = uio_in;
-
       //TODO FIGURE OUT WHY MEMORY ADDRESS IN THE INSTRUCTION DECODE DOESNT
       //WORK
       if(address_select) begin
-        ab = instruction_register;
+        ab = memory_address;
       end
 
       if(pc_enable) begin
@@ -156,5 +153,7 @@ module tt_um_6502 (
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
   assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
-  assign uio_oe  = clk_cpu?8'h1:8'h0;
+  assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h0);
+
+  assign instruction_register = uio_in;
 endmodule

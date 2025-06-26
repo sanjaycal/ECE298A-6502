@@ -42,6 +42,7 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
+
 always @(*) begin
     processor_status_register_write = 1;
     address_select = 1;
@@ -56,7 +57,6 @@ always @(*) begin
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
-    memory_address = 0;
 
     case(STATE)
     T_0: begin
@@ -65,6 +65,7 @@ always @(*) begin
             ADDRESSING = `ADR_ZPG;
         end
         pc_enable = 1;   // Increment Program Counter  
+        memory_address = 0;
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
@@ -87,9 +88,6 @@ always @(*) begin
             data_buffer_enable = 1;
             data_buffer_direction = 1; //read from ALU(only right now)
             rw = 1; //read into the data_buffer
-
-
-
         end
     end
     T_4: begin
@@ -98,6 +96,7 @@ always @(*) begin
             data_buffer_enable = 1;
             data_buffer_direction = 0; //write to memory
             rw = 0;
+            address_select = 1;
         end
     end
     endcase
