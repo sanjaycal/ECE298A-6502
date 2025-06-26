@@ -45,10 +45,8 @@ reg [7:0] OPCODE;
 
 always @(*) begin
     processor_status_register_write = 1;
-    address_select = 1;
+    address_select = 0;
     processor_status_register_rw = 1;
-    rw = 1;
-    data_buffer_enable = 0;
     data_buffer_direction = 1; 
     input_data_latch_enable = 0;
     pc_enable = 0;
@@ -66,28 +64,35 @@ always @(*) begin
         end
         pc_enable = 1;   // Increment Program Counter  
         memory_address = 0;
+        data_buffer_enable = 0;
+        rw=1;
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
             memory_address = instruction; // Puts the memory address read in adh/adl
             address_select = 1;
+            data_buffer_enable = 0;
         end
+        rw=1;
     end
     T_2: begin
         if(OPCODE == `OP_ASL_ZPG) begin 
             rw = 1;
             data_buffer_direction = 0; //read from memory
             data_buffer_enable = 1;
+            address_select = 1;
         end    
+        rw=1;
     end
     T_3: begin
         if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable  = `ASL;// tell the ALU to do the math
             processor_status_register_rw = 0;
-            //now we write the LAU value to the data buffer
+            //now we write the ALU value to the data buffer
             data_buffer_enable = 1;
             data_buffer_direction = 1; //read from ALU(only right now)
-            rw = 1; //read into the data_buffer
+            rw = 0; //read into the data_buffer
+            address_select = 0;
         end
     end
     T_4: begin

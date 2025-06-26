@@ -104,6 +104,7 @@ async def test_ASL_ZPG(dut):
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0  # this shouldn't change though
     await ClockCycles(dut.clk, 1)
+    dut._log.info(f"CURRENT VAL INSIDE:{dut.uo_out.value}")
     # we arent trying to read at this time, so it doesnt matter
 
     # now we write from the ALU to the data bus buffer
@@ -111,6 +112,7 @@ async def test_ASL_ZPG(dut):
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0
     await ClockCycles(dut.clk, 1)
+    dut._log.info(f"CURRENT VAL INSIDE:{dut.uo_out.value}")
     # we arent trying to read at this time, so it doesnt matter
 
     # now we output 34(currently in the data buffer) to 0x066
@@ -120,5 +122,6 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_oe.value == hex_to_num("ff")  # check if we are otuputting
     assert dut.uio_out.value == 138  # check the output
     await ClockCycles(dut.clk, 1)
+    assert dut.uio_oe.value == 1  # check if the last bit is outputting
     assert dut.uio_out.value == 0  # last bit should be 0 for write
     assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066

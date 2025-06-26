@@ -23,7 +23,7 @@ module tt_um_6502 (
   wire index_register_y_enable;
   wire index_register_x_enable;
   wire stack_pointer_register_enable;
-  wire [2:0] alu_op;
+  wire [2:0] ALU_op;
   wire accumulator_enable;
   wire pc_enable;
   wire input_data_latch_enable;
@@ -54,17 +54,17 @@ module tt_um_6502 (
   reg [7:0] data_bus_buffer;
 
   reg [15:0] pc;
-  reg [15:0] memory_address;
+  wire [15:0] memory_address;
   reg [7:0] accumulator;
   reg [7:0] index_register_x;
   reg [7:0] index_register_y;
   wire [7:0] instruction_register;
   reg [6:0] processor_status_register;
 
-  reg [7:0] ALU_inputA;
+  wire [7:0] ALU_inputA;
   reg [7:0] ALU_inputB;
 
-  reg [7:0] ALU_output;
+  wire [7:0] ALU_output;
   wire [7:0] ALU_flags_output;
 
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
@@ -86,14 +86,14 @@ module tt_um_6502 (
     input_data_latch_enable,
     pc_enable,
     accumulator_enable,
-    alu_op,
+    ALU_op,
     stack_pointer_register_enable,
     index_register_x_enable,
     index_register_y_enable
   );
   
   alu ALU(
-    alu_op,
+    ALU_op,
     ALU_inputA,
     ALU_inputB,
     ALU_output,
@@ -112,33 +112,20 @@ module tt_um_6502 (
       index_register_y = 0;
       processor_status_register = 0;
     end else begin
-      //TODO FIGURE OUT WHY MEMORY ADDRESS IN THE INSTRUCTION DECODE DOESNT
-      //WORK
+      data_bus_buffer = (data_buffer_enable&!rw)?
+                          ((data_buffer_direction)?ALU_output:uio_in):
+                          data_bus_buffer;
+
       if(address_select) begin
         ab = memory_address;
-      end
-
-      if(pc_enable) begin
+      end else if(pc_enable) begin
         pc = pc + 1;
         ab = pc;
+      end else begin
+        ab = data_buffer_enable; // DEBUG STATEMENT
       end
 
-      if(data_buffer_enable) begin
-        if (data_buffer_direction) begin
-          if (rw) begin
-            data_bus_buffer = ALU_output;
-          end else begin
-            ALU_inputA = data_bus_buffer;
-          end
-        end else begin
-          if (rw) begin
-            data_bus_buffer = uio_in;
-          end else begin
-            //uio_out = data_bus_buffer; THIS IS ALREADY DONE AUTOMATICALLY
-            //BUT LEAVING HERE SO WE KNOW
-          end
-        end
-      end
+
     end
   end
 
@@ -148,12 +135,13 @@ module tt_um_6502 (
   assign nmi_in = 0;
   assign res_in = 0;
   assign processor_status_register_read = processor_status_register;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write, rw};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
   assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
-  assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h0);
+  assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
 
   assign instruction_register = uio_in;
+  assign ALU_inputA = data_bus_buffer;
 endmodule
