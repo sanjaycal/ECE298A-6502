@@ -74,14 +74,21 @@ always @(*) begin
     end
     T_2: begin
         if(OPCODE == `OP_ASL_ZPG) begin 
-            data_buffer_direction = 1; //read from memory
+            rw = 1;
+            data_buffer_direction = 0; //read from memory
             data_buffer_enable = 1;
         end    
     end
     T_3: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  = `ASL;// replace with a generic condition that enables ALU
+            alu_enable  = `ASL;// tell the ALU to do the math
             processor_status_register_rw = 0;
+            //now we write the LAU value to the data buffer
+            data_buffer_enable = 1;
+            data_buffer_direction = 1; //read from ALU(only right now)
+            rw = 1; //read into the data_buffer
+
+
 
         end
     end

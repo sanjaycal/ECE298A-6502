@@ -11,23 +11,21 @@ module alu (
     output wire [7:0]   ALU_flags_output
 );
 
-    reg [7:0] ALU_buffer = 0;
     reg [7:0] ALU_flags_buffer = 0;
 
     always @(*) begin
-        ALU_buffer = 0;
         case(alu_op)
             `ASL: begin
                 ALU_flags_buffer[`CARRY_FLAG] = inputA[7];
                 ALU_flags_buffer[`ZERO_FLAG] = 0; //TODO FIX THIS
                 ALU_flags_buffer[`NEGATIVE_FLAG] = inputA[6];
-                ALU_buffer = inputA << 1;
             end
-            default: ALU_buffer = 0;
+            default: ALU_flags_buffer = 0;
         endcase
     end
 
-    assign ALU_output = ALU_buffer;
+    assign ALU_output = (alu_op==`ASL)? inputA << 1:
+                        0;
     assign ALU_flags_output = ALU_flags_buffer;
 
 endmodule

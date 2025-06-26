@@ -127,7 +127,20 @@ module tt_um_6502 (
       end
 
       if(data_buffer_enable) begin
-        data_bus_buffer = uio_in;
+        if (data_buffer_direction) begin
+          if (rw) begin
+            data_bus_buffer = ALU_output;
+          end else begin
+            ALU_inputA = data_bus_buffer;
+          end
+        end else begin
+          if (rw) begin
+            data_bus_buffer = uio_in;
+          end else begin
+            //uio_out = data_bus_buffer; THIS IS ALREADY DONE AUTOMATICALLY
+            //BUT LEAVING HERE SO WE KNOW
+          end
+        end
       end
     end
   end
@@ -142,6 +155,6 @@ module tt_um_6502 (
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?data_flags:data_bus_buffer;
+  assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
   assign uio_oe  = clk_cpu?8'h1:8'h0;
 endmodule
