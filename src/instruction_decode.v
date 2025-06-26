@@ -39,7 +39,7 @@ localparam T_6 = 3'd6;
 //CONSTANTS
 localparam BUF_IDLE_TWO     = 2'b00;
 localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
-localparam BUF_STORE_TWO    = 2'b10 // Put the register value on a BUS
+localparam BUF_STORE_TWO    = 2'b10; // Put the register value on a BUS
 
 reg [4:0] STATE = 0;
 reg [4:0] NEXT_STATE = 0;
