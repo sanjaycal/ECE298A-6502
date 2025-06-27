@@ -54,7 +54,7 @@ always_latch begin
     input_data_latch_enable = `BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = 0;
-    stack_pointer_register_enable = 0;
+    //stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
 
@@ -128,6 +128,6 @@ always @(posedge clk ) begin
         end
     end
 end
-wire _unused = &{irq, nmi, processor_status_register_read };
+wire _unused = &{irq, nmi, processor_status_register_read, stack_pointer_register_enable};
 
 endmodule
