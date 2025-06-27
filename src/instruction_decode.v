@@ -47,6 +47,7 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
+
 always @(*) begin
     NEXT_STATE = STATE;
 
@@ -58,7 +59,6 @@ always @(*) begin
     input_data_latch_enable = BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = 0;
-    alu_enable = `NOP;
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
