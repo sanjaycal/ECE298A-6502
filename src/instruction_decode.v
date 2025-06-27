@@ -43,7 +43,7 @@ reg [2:0] NEXT_STATE = S_IDLE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
-always_latch begin
+always_comb begin
     NEXT_STATE = STATE;
 
     processor_status_register_write = 7'b0;
