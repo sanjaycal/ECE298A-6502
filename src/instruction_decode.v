@@ -58,6 +58,7 @@ always @(*) begin
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
+
     case(STATE)
     S_IDLE: begin
         NEXT_STATE = S_OPCODE_READ;
@@ -75,7 +76,6 @@ always @(*) begin
         end  
     end
     S_ZPG_ADR_READ: begin
-        memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
         address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
             NEXT_STATE = S_IDL_WRITE;
@@ -124,6 +124,8 @@ always @(posedge clk ) begin
             end else if(instruction[4:2] == `ADR_A) begin
                 ADDRESSING <= `ADR_A;
             end
+        end else if (NEXT_STATE == S_ZPG_ADR_READ) begin
+            memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
         end
     end
 end
