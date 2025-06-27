@@ -27,7 +27,7 @@ module tt_um_6502 (
   wire accumulator_enable;
   wire pc_enable;
   wire input_data_latch_enable;
-  wire rdy = 1;
+  wire rdy;
   wire rw;
   wire dbe;
   wire res_in;
@@ -47,7 +47,7 @@ module tt_um_6502 (
 
 
   reg [7:0] address_register = 0;
-  reg [15:0] ab;
+  wire [15:0] ab;
 
   reg [7:0] data_register;
   wire [7:0] data_flags = 0; //data_flags[0]=RW, 0 is read, 1 is write
@@ -70,7 +70,7 @@ module tt_um_6502 (
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
     instruction_register,
-    clk,
+    clk_cpu,
     res,
     irq,
     nmi,
@@ -106,25 +106,18 @@ module tt_um_6502 (
   always @(posedge clk_cpu) begin
     if (rst_n == 0) begin
       pc = 0;
-      ab = 0;
       accumulator = 0;
       index_register_x = 0;
       index_register_y = 0;
       processor_status_register = 0;
     end else begin
-      data_bus_buffer = (data_buffer_enable&!rw)?
+      data_bus_buffer <= (data_buffer_enable&!rw)?
                           ((data_buffer_direction)?ALU_output:uio_in):
                           data_bus_buffer;
 
-      if(address_select) begin
-        ab = memory_address;
-      end else if(pc_enable) begin
-        pc = pc + 1;
-        ab = pc;
-      end else begin
-        ab = data_buffer_enable; // DEBUG STATEMENT
+      if (pc_enable) begin
+        pc = pc+1;
       end
-
 
     end
   end
@@ -135,13 +128,16 @@ module tt_um_6502 (
   assign nmi_in = 0;
   assign res_in = 0;
   assign processor_status_register_read = processor_status_register;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, pc_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, address_select, data_buffer_enable, data_buffer_direction, processor_status_register_rw, processor_status_register_read, processor_status_register_write};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, processor_status_register_rw, processor_status_register_read, processor_status_register_write};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
+  assign uio_out = clk_cpu?{4'b0, data_buffer_enable,address_select, pc_enable, rw}:data_bus_buffer;
   assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
 
   assign instruction_register = uio_in;
   assign ALU_inputA = data_bus_buffer;
+  assign ab = pc_enable?pc:(address_select?memory_address:11);
+
+  assign rdy = rst_n;
 endmodule

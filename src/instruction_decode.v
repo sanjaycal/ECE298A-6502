@@ -45,13 +45,9 @@ reg [7:0] OPCODE;
 
 always @(*) begin
     processor_status_register_write = 1;
-    address_select = 0;
     processor_status_register_rw = 1;
-    data_buffer_direction = 1; 
     input_data_latch_enable = 0;
-    pc_enable = 0;
     accumulator_enable = 0;
-    alu_enable = `NOP;
     stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
@@ -65,15 +61,21 @@ always @(*) begin
         pc_enable = 1;   // Increment Program Counter  
         memory_address = 0;
         data_buffer_enable = 0;
+        address_select = 0;
         rw=1;
+        alu_enable = `NOP;
+        data_buffer_direction = 0; 
     end
     T_1: begin
         if(ADDRESSING == `ADR_ZPG) begin
+            pc_enable = 0;
             memory_address = instruction; // Puts the memory address read in adh/adl
             address_select = 1;
             data_buffer_enable = 0;
+            rw=1;
+            alu_enable = `NOP;
+            data_buffer_direction = 0; 
         end
-        rw=1;
     end
     T_2: begin
         if(OPCODE == `OP_ASL_ZPG) begin 
@@ -81,8 +83,9 @@ always @(*) begin
             data_buffer_direction = 0; //read from memory
             data_buffer_enable = 1;
             address_select = 1;
+            alu_enable = `NOP;
+            pc_enable = 0;
         end    
-        rw=1;
     end
     T_3: begin
         if(OPCODE == `OP_ASL_ZPG) begin
@@ -93,15 +96,17 @@ always @(*) begin
             data_buffer_direction = 1; //read from ALU(only right now)
             rw = 0; //read into the data_buffer
             address_select = 0;
+            pc_enable = 0;
         end
     end
     T_4: begin
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable = `ASL;
+            alu_enable = `NOP;
             data_buffer_enable = 1;
             data_buffer_direction = 0; //write to memory
             rw = 0;
             address_select = 1;
+            pc_enable = 0;
         end
     end
     endcase
