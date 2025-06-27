@@ -28,4 +28,6 @@ module alu (
                         0;
     assign ALU_flags_output = ALU_flags_buffer;
 
+    wire _unused = {inputB};
+
 endmodule

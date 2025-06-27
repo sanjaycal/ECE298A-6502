@@ -13,6 +13,6 @@
     // ADDRESSING
     `define ADR_ZPG         3'b001
     `define ADR_ABS         3'b011
-    `define ADR_A           8'b0xx01010
+    `define ADR_A           3'b010
 
 `endif

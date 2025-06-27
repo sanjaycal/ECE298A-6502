@@ -36,10 +36,10 @@ localparam S_ZPG_ADR_READ   = 3'd2;
 localparam S_IDL_WRITE      = 3'd3;
 localparam S_ALU_ZPG        = 3'd4;
 localparam S_DBUF_OUTPUT    = 3'd5;
-localparam T_6              = 3'd6;
+//localparam T_6              = 3'd6;
 
-reg [4:0] STATE      = S_IDLE;
-reg [4:0] NEXT_STATE = S_IDLE;
+reg [2:0] STATE      = S_IDLE;
+reg [2:0] NEXT_STATE = S_IDLE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
@@ -75,16 +75,16 @@ always @(*) begin
         end  
     end
     S_ZPG_ADR_READ: begin
-        memory_address <= instruction; // Puts the memory address read in adh/adl
-        address_select <= 1;
+        memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
+        address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
             NEXT_STATE = S_IDL_WRITE;
         end
     end
     S_IDL_WRITE: begin
-        input_data_latch_enable <= `BUF_LOAD_TWO;
+        input_data_latch_enable = `BUF_LOAD_TWO;
         if(OPCODE == `OP_ASL_ZPG) begin
-            alu_enable  <= `ASL;
+            alu_enable  = `ASL;
             NEXT_STATE = S_ALU_ZPG;
         end    
     end
