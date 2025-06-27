@@ -118,7 +118,7 @@ async def test_ASL_ZPG(dut):
 
     print_info(dut)
 
-    dut._log.info(f"------------STARTING STATE DONE-----------")
+    dut._log.info("------------STARTING STATE DONE-----------")
 
     # check that instructions are being read and that the PC is incrementing
     await ClockCycles(dut.clk, 1)
@@ -128,7 +128,7 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
     assert dut.uo_out.value == 1
 
-    dut._log.info(f"------------INSTRUCTION READ-----------")
+    dut._log.info("------------INSTRUCTION READ-----------")
 
     # tell it to read from memory address 0x0066
     dut.uio_in.value = hex_to_num("66")
@@ -139,7 +139,7 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
     assert dut.uo_out.value == hex_to_num("66")
 
-    dut._log.info(f"------------ADDRESS READ-----------")
+    dut._log.info("------------ADDRESS READ-----------")
 
     # when it tries to read from 0x0066 it should get 69 as the value
     dut.uio_in.value = 69
@@ -149,7 +149,7 @@ async def test_ASL_ZPG(dut):
     print_info(dut)
     # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info(f"------------DATA READ-----------")
+    dut._log.info("------------DATA READ-----------")
 
     # now we write from the ALU to the data bus buffer
     dut.uio_in.value = hex_to_num("00")
@@ -159,7 +159,7 @@ async def test_ASL_ZPG(dut):
     print_info(dut)
     # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info(f"------------ALU CALCULATED-----------")
+    dut._log.info("------------ALU CALCULATED-----------")
 
     # now we output 34(currently in the data buffer) to 0x066
     dut.uio_in.value = hex_to_num("00")
@@ -173,4 +173,4 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_oe.value == 1  # check if the last bit is outputting
     assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066
 
-    dut._log.info(f"------------DONE-----------")
+    dut._log.info("------------DONE-----------")
