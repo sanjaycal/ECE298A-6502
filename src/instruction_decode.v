@@ -121,7 +121,7 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ZPG;
             end else if(instruction[4:2] == `ADR_ABS) begin
                 ADDRESSING <= `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
-            end else if(instruction == `ADR_A) begin
+            end else if(instruction[4:2] == `ADR_A) begin
                 ADDRESSING <= `ADR_A;
             end
         end
