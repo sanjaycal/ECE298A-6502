@@ -20,11 +20,11 @@ module tt_um_6502 (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  wire index_register_y_enable;
-  wire index_register_x_enable;
-  wire stack_pointer_register_enable;
-  wire [2:0] ALU_op;
-  wire accumulator_enable;
+  wire [2:0] index_register_y_enable;
+  wire [2:0] index_register_x_enable;
+  wire [2:0] stack_pointer_register_enable;
+  wire [2:0] alu_op;
+  wire [2:0] accumulator_enable;
   wire pc_enable;
   wire input_data_latch_enable;
   wire rdy;
@@ -69,27 +69,26 @@ module tt_um_6502 (
 
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
-    instruction_register,
-    clk_cpu,
-    res,
-    irq,
-    nmi,
-    rdy,
-    processor_status_register_read,
-    processor_status_register_write,
-    memory_address,
-    address_select,
-    processor_status_register_rw,
-    rw,
-    data_buffer_enable,
-    data_buffer_direction,
-    input_data_latch_enable,
-    pc_enable,
-    accumulator_enable,
-    ALU_op,
-    stack_pointer_register_enable,
-    index_register_x_enable,
-    index_register_y_enable
+    .instruction                   (instruction_register),
+    .clk                           (clk),
+    .res                           (res),
+    .irq                           (irq),
+    .nmi                           (nmi),
+    .rdy                           (rdy),
+    .processor_status_register_read(processor_status_register_read),
+    .processor_status_register_write(processor_status_register_write),
+    .memory_address                (memory_address),
+    .address_select                (address_select),
+    .processor_status_register_rw  (processor_status_register_rw),
+    .rw                            (rw),
+    .data_buffer_enable            (data_buffer_enable),
+    .input_data_latch_enable       (input_data_latch_enable), 
+    .pc_enable                     (pc_enable),
+    .accumulator_enable            (accumulator_enable),
+    .alu_enable                    (alu_op),  
+    .stack_pointer_register_enable (stack_pointer_register_enable),
+    .index_register_X_enable       (index_register_x_enable),
+    .index_register_Y_enable       (index_register_y_enable)
   );
   
   alu ALU(
