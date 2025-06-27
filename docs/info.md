@@ -9,7 +9,7 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+This is a 6502 that has a cpu clock frequency of half the input clock due to IO restrictions
 
 ## How to test
 
