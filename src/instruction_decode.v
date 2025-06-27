@@ -34,12 +34,17 @@ localparam S_ZPG_ADR_READ   = 3'd2;
 localparam S_IDL_WRITE      = 3'd3;
 localparam S_ALU_ZPG        = 3'd4;
 localparam S_DBUF_OUTPUT    = 3'd5;
-localparam T_6              = 3'd6;
+localparam S_ALU_A          = 3'd6;
 
-//CONSTANTS
+//BUFFER OPERATIONS
 localparam BUF_IDLE_TWO     = 2'b00;
 localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
 localparam BUF_STORE_TWO    = 2'b10; // Put the register value on a BUS
+localparam BUF_IDLE_THREE   = 3'b000;
+localparam BUF_LOAD1_THREE   = 3'b100; // Take from a BUS and keep
+localparam BUF_LOAD2_THREE   = 3'b101; // Take from a BUS and keep
+localparam BUF_STORE1_THREE   = 3'b110; // Put the register value on a BUS
+localparam BUF_STORE2_THREE   = 3'b111; // Put the register value on a BUS
 
 reg [4:0] STATE      = S_IDLE;
 reg [4:0] NEXT_STATE = S_IDLE;
@@ -58,10 +63,10 @@ always @(*) begin
     data_buffer_enable = BUF_IDLE_TWO;
     input_data_latch_enable = BUF_IDLE_TWO;
     pc_enable = 0;
-    accumulator_enable = 0;
-    stack_pointer_register_enable = 0;
-    index_register_X_enable = 0;
-    index_register_Y_enable = 0;
+    accumulator_enable = BUF_IDLE_THREE;
+    stack_pointer_register_enable = BUF_IDLE_THREE;
+    index_register_X_enable = BUF_IDLE_THREE;
+    index_register_Y_enable = BUF_IDLE_THREE;
     case(STATE)
     S_IDLE: begin
         NEXT_STATE = S_OPCODE_READ;
@@ -75,7 +80,11 @@ always @(*) begin
         end else if(instruction[4:2] == `ADR_ABS) begin
             NEXT_STATE = S_IDLE;
         end else if(instruction == `ADR_A) begin
-            NEXT_STATE = S_IDLE;
+            NEXT_STATE = S_ALU_A;   // This is a special case for accumulator operations. All Accumulator operations involve the ALU.
+        end else(instruction == `OP_NOP) begin
+            NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
+        end else begin
+            NEXT_STATE = S_IDLE; // Default case, should not happen.
         end  
     end
     S_ZPG_ADR_READ: begin
@@ -105,6 +114,15 @@ always @(*) begin
         data_buffer_enable = BUF_STORE_TWO;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
+    end
+    S_ALU_A: begin
+        accumulator_enable = BUF_LOAD2_THREE;
+        processor_status_register_rw = 0;
+        if(OPCODE == `OP_ASL_A) begin
+            alu_enable = `ASL;
+            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+            NEXT_STATE = S_OPCODE_READ;
+        end
     end
     default: NEXT_STATE = S_IDLE;
     endcase
