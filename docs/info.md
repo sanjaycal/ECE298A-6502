@@ -13,8 +13,8 @@ This is a 6502 that has a cpu clock frequency of half the input clock due to IO 
 
 ## How to test
 
-Explain how to use your project
+run a fake memory maybe????
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+laptop maybe, not done yet
