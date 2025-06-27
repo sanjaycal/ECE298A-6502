@@ -70,7 +70,7 @@ module tt_um_6502 (
   clock_generator clockGenerator(clk, clk_cpu, clk_output);
   instruction_decode instructionDecode(
     .instruction                   (instruction_register),
-    .clk                           (clk),
+    .clk                           (clk_cpu),
     .res                           (res),
     .irq                           (irq),
     .nmi                           (nmi),
@@ -104,7 +104,7 @@ module tt_um_6502 (
 
   always @(posedge clk_cpu) begin
     if (rst_n == 0) begin
-      pc = 0;
+      pc = 1;
       accumulator = 0;
       index_register_x = 0;
       index_register_y = 0;
