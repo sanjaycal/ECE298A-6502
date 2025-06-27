@@ -33,6 +33,7 @@ def print_info(dut):
     dut._log.info(f" DATA BUS BUFFER:{dut.user_project.data_bus_buffer.value}")
     dut._log.info(f" PC ENABLE:{dut.user_project.pc_enable.value}")
     dut._log.info(f" PC:{dut.user_project.pc.value}")
+    dut._log.info(f" AB:{dut.user_project.address_select.value}")
     dut._log.info(f" AB:{dut.user_project.ab.value}")
     dut._log.info(f" INSTRUCTION:{dut.user_project.instruction_register.value}")
 

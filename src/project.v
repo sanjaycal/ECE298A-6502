@@ -144,7 +144,9 @@ module tt_um_6502 (
 
   assign instruction_register = uio_in;
   assign ALU_inputA = internal_data_bus;
+
   assign ab = pc_enable?pc:(address_select?memory_address:11);
+
   assign alu_output_bus = ALU_output;
   assign internal_data_bus = (input_data_latch_enable!=2)?input_data_latch:
                               0;

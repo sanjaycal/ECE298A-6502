@@ -44,7 +44,6 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
-
 always @(*) begin
     NEXT_STATE = STATE;
 
@@ -101,6 +100,7 @@ always @(*) begin
     end
      S_DBUF_OUTPUT: begin
         data_buffer_enable = `BUF_STORE_TWO;
+        address_select = 1;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
