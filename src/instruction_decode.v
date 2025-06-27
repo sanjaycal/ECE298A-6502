@@ -44,7 +44,7 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
-always @(*) begin
+always_latch begin
     NEXT_STATE = STATE;
 
     processor_status_register_write = 7'b0;
@@ -70,7 +70,7 @@ always @(*) begin
             NEXT_STATE = S_ZPG_ADR_READ;
         end else if(instruction[4:2] == `ADR_ABS) begin
             NEXT_STATE = S_IDLE;
-        end else if(instruction == `ADR_A) begin
+        end else if(instruction[4:2] == `ADR_A) begin
             NEXT_STATE = S_IDLE;
         end  
     end
