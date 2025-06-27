@@ -43,8 +43,9 @@ reg [2:0] NEXT_STATE = S_IDLE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
-
+/*verilator lint_off*/
 always @(*) begin
+/*verilator lint_on*/
     NEXT_STATE = STATE;
 
     processor_status_register_write = 7'b0;
@@ -125,7 +126,7 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_A;
             end
         end else if (NEXT_STATE == S_ZPG_ADR_READ) begin
-            memory_address = {8'b0, instruction}; // Puts the memory address read in adh/adl
+            memory_address <= {8'b0, instruction}; // Puts the memory address read in adh/adl
         end
     end
 end
