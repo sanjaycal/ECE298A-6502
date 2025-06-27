@@ -54,7 +54,7 @@ always_latch begin
     input_data_latch_enable = `BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = 0;
-    stack_pointer_register_enable = STATE;
+    stack_pointer_register_enable = 0;
     index_register_X_enable = 0;
     index_register_Y_enable = 0;
 
@@ -102,6 +102,7 @@ always_latch begin
         address_select = 1;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
+        stack_pointer_register_enable = 1;
     end
     default: NEXT_STATE = S_IDLE;
     endcase
