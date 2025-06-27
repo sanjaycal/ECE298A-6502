@@ -2,8 +2,10 @@
 
     `define ALU_OPCODES 1
     //OPCODE
-    `define NOP 3'b000
-    `define ASL 3'b001
+    `define NOP 4'b0000
+    `define ASL 4'b0001
+
+    `define TMX 4'b1111
 
 
 `endif

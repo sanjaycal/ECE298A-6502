@@ -35,6 +35,7 @@ localparam S_IDL_WRITE      = 3'd3;
 localparam S_ALU_ZPG        = 3'd4;
 localparam S_DBUF_OUTPUT    = 3'd5;
 localparam S_ALU_A          = 3'd6;
+localparam S_ALU_TMX        = 3'd7;
 
 //BUFFER OPERATIONS
 localparam BUF_IDLE_TWO     = 2'b00;
@@ -75,23 +76,26 @@ always @(*) begin
         // In this state, we just need to increment the PC and decide where to go next.
         // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
         pc_enable = 1;   // Increment Program Counter
-        if(instruction[4:2] == `ADR_ZPG) begin
+        if(instruction[4:2] == `ADR_ZPG | instruction[4:2] == `ADR_ZPG_X) begin
             NEXT_STATE = S_ZPG_ADR_READ;
         end else if(instruction[4:2] == `ADR_ABS) begin
             NEXT_STATE = S_IDLE;
         end else if(instruction == `ADR_A) begin
             NEXT_STATE = S_ALU_A;   // This is a special case for accumulator operations. All Accumulator operations involve the ALU.
-        end else(instruction == `OP_NOP) begin
+        end else if(instruction == `OP_NOP) begin
             NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
         end else begin
             NEXT_STATE = S_IDLE; // Default case, should not happen.
         end  
     end
     S_ZPG_ADR_READ: begin
-        memory_address <= instruction; // Puts the memory address read in adh/adl
-        address_select <= 1;
+        memory_address = instruction; // Puts the memory address read in adh/adl
+        address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
             NEXT_STATE = S_IDL_WRITE;
+        end
+        else if(ADDRESSING == `ADR_ZPG_X) begin
+            NEXT_STATE = S_IDLE;//TODO
         end
     end
     S_IDL_WRITE: begin
@@ -101,28 +105,37 @@ always @(*) begin
         end    
     end
     S_ALU_ZPG: begin
+        input_data_latch_enable = BUF_STORE_TWO;
+        processor_status_register_rw = 0;
         if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable  = `ASL;
-            input_data_latch_enable = BUF_STORE_TWO;
-            data_buffer_enable = BUF_LOAD_TWO;
-            processor_status_register_rw = 0;
             processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+        end
+        NEXT_STATE = S_ALU_TMX
+    end
+    S_ALU_TMX: begin
+        alu_enable = `TMX;
+        if(ADDRESSING == ADR_ZPG) begin
+            data_buffer_enable = BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
         end
-    end
-     S_DBUF_OUTPUT: begin
+        if(ADDRESSING == ADR_A) begin
+            accumulator_enable = BUF_LOAD2_THREE;
+            NEXT_STATE = S_OPCODE_READ;
+        end
+    end 
+    S_DBUF_OUTPUT: begin
         data_buffer_enable = BUF_STORE_TWO;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
     S_ALU_A: begin
-        accumulator_enable = BUF_LOAD2_THREE;
         processor_status_register_rw = 0;
         if(OPCODE == `OP_ASL_A) begin
             alu_enable = `ASL;
             processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
-            NEXT_STATE = S_OPCODE_READ;
         end
+        NEXT_STATE = S_ALU_TMX;
     end
     default: NEXT_STATE = S_IDLE;
     endcase
@@ -143,6 +156,8 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
             end else if(instruction == `ADR_A) begin
                 ADDRESSING <= `ADR_A;
+            end else if (instruction[4:2] == `ADR_ZPG_X) begin
+                ADDRESSING <= `ADR_ZPG_X;
             end
         end
     end
