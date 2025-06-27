@@ -44,7 +44,7 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
-always_latch begin
+always @(*) begin
     NEXT_STATE = STATE;
 
     processor_status_register_write = 7'b0;
