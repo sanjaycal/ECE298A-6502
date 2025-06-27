@@ -43,9 +43,9 @@ reg [2:0] NEXT_STATE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
-// verilator lint_off UNSIGNED
+/* verilator lint_off UNSIGNED */
 always @(*) begin
-// verilator lint_on UNSIGNED
+/* verilator lint_on UNSIGNED */
     NEXT_STATE = STATE;
 
     processor_status_register_write = 7'b0;
