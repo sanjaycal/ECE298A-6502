@@ -7,6 +7,8 @@
 `include "../src/interrupt_logic.v"
 `include "../src/alu.v"
 
+`include "../inc/buf_instructions.vh"
+
 `default_nettype none
 
 module tt_um_6502 (
@@ -26,7 +28,7 @@ module tt_um_6502 (
   wire [2:0] ALU_op;
   wire [2:0] accumulator_enable;
   wire pc_enable;
-  wire [1:0]input_data_latch_enable;
+  wire [1:0] input_data_latch_enable;
   wire rdy;
   wire rw;
   wire dbe;
@@ -50,8 +52,11 @@ module tt_um_6502 (
   wire [15:0] ab;
 
   reg [7:0] data_register;
+  reg [7:0] input_data_latch;
+  wire [7:0] internal_data_bus;
+  wire [7:0] alu_output_bus;
   wire [7:0] data_flags = 0; //data_flags[0]=RW, 0 is read, 1 is write
-  reg [7:0] data_bus_buffer;
+  reg [7:0] data_bus_buffer=255;
 
   reg [15:0] pc;
   wire [15:0] memory_address;
@@ -110,9 +115,12 @@ module tt_um_6502 (
       index_register_y = 0;
       processor_status_register = 0;
     end else begin
-      data_bus_buffer <= (data_buffer_enable&!rw)?
-                          ((data_buffer_direction)?ALU_output:uio_in):
+      data_bus_buffer <= (data_buffer_enable!=2'b01)?
+                          alu_output_bus:
                           data_bus_buffer;
+
+      input_data_latch <= (input_data_latch_enable!=2'b01)?instruction_register:input_data_latch;
+
 
       if (pc_enable) begin
         pc = pc+1;
@@ -131,12 +139,15 @@ module tt_um_6502 (
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?{4'b0, data_buffer_enable,address_select, pc_enable, rw}:data_bus_buffer;
+  assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
   assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
 
   assign instruction_register = uio_in;
-  assign ALU_inputA = data_bus_buffer;
+  assign ALU_inputA = internal_data_bus;
   assign ab = pc_enable?pc:(address_select?memory_address:11);
+  assign alu_output_bus = ALU_output;
+  assign internal_data_bus = (input_data_latch_enable!=2)?input_data_latch:
+                              0;
 
   assign rdy = rst_n;
 endmodule

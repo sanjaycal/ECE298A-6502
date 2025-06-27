@@ -1,6 +1,8 @@
 `include "../inc/opcode.vh"
 `include "../inc/status_register.vh"
 
+`include "../inc/buf_instructions.vh"
+
 `include "../inc/alu_ops.vh"
 
 `default_nettype none
@@ -36,11 +38,6 @@ localparam S_ALU_ZPG        = 3'd4;
 localparam S_DBUF_OUTPUT    = 3'd5;
 localparam T_6              = 3'd6;
 
-//CONSTANTS
-localparam BUF_IDLE_TWO     = 2'b00;
-localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
-localparam BUF_STORE_TWO    = 2'b10; // Put the register value on a BUS
-
 reg [4:0] STATE      = S_IDLE;
 reg [4:0] NEXT_STATE = S_IDLE;
 reg [2:0] ADDRESSING;
@@ -55,8 +52,8 @@ always @(*) begin
     address_select = 1'b0;
     processor_status_register_rw = 1;
     rw = 1;
-    data_buffer_enable = BUF_IDLE_TWO;
-    input_data_latch_enable = BUF_IDLE_TWO;
+    data_buffer_enable = `BUF_IDLE_TWO;
+    input_data_latch_enable = `BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = 0;
     stack_pointer_register_enable = 0;
@@ -86,23 +83,24 @@ always @(*) begin
         end
     end
     S_IDL_WRITE: begin
-        input_data_latch_enable = BUF_LOAD_TWO;
+        input_data_latch_enable <= `BUF_LOAD_TWO;
         if(OPCODE == `OP_ASL_ZPG) begin
+            alu_enable  <= `ASL;
             NEXT_STATE = S_ALU_ZPG;
         end    
     end
     S_ALU_ZPG: begin
         if(OPCODE == `OP_ASL_ZPG) begin
             alu_enable  = `ASL;
-            input_data_latch_enable = BUF_STORE_TWO;
-            data_buffer_enable = BUF_LOAD_TWO;
+            input_data_latch_enable = `BUF_STORE_TWO;
+            data_buffer_enable = `BUF_LOAD_TWO;
             processor_status_register_rw = 0;
             processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
             NEXT_STATE = S_DBUF_OUTPUT;
         end
     end
      S_DBUF_OUTPUT: begin
-        data_buffer_enable = BUF_STORE_TWO;
+        data_buffer_enable = `BUF_STORE_TWO;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end

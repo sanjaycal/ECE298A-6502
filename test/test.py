@@ -8,21 +8,33 @@ from cocotb.triggers import ClockCycles
 
 def print_info(dut):
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE STATE:{dut.user_project.instructionDecode.STATE.value}"
+        f" INSTRUCTION DECODE STATE:{dut.user_project.instructionDecode.STATE.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE NEXT STATE:{dut.user_project.instructionDecode.NEXT_STATE.value}"
+        f" INSTRUCTION DECODE NEXT STATE:{dut.user_project.instructionDecode.NEXT_STATE.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE MEMORY ADDRESS:{dut.user_project.instructionDecode.memory_address.value}"
+        f" INSTRUCTION DECODE MEMORY ADDRESS:{dut.user_project.instructionDecode.memory_address.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE OPCODE:{dut.user_project.instructionDecode.OPCODE.value}"
+        f" INSTRUCTION DECODE OPCODE:{dut.user_project.instructionDecode.OPCODE.value}"
     )
-    dut._log.info(f"CURRENT PC ENABLE:{dut.user_project.pc_enable.value}")
-    dut._log.info(f"CURRENT PC:{dut.user_project.pc.value}")
-    dut._log.info(f"CURRENT AB:{dut.user_project.ab.value}")
-    dut._log.info(f"CURRENT INSTRUCTION:{dut.user_project.instruction_register.value}")
+    dut._log.info(f" ALU OP ENABLE:{dut.user_project.ALU_op.value}")
+    dut._log.info(f" ALU INPUT A:{dut.user_project.ALU_inputA.value}")
+    dut._log.info(f" ALU OUTPUT:{dut.user_project.alu_output_bus.value}")
+    dut._log.info(f" INTERNAL DATA BUS:{dut.user_project.internal_data_bus.value}")
+    dut._log.info(
+        f" INPUT DATA LATCH ENABLE:{dut.user_project.input_data_latch_enable.value}"
+    )
+    dut._log.info(f" INPUT DATA LATCH:{dut.user_project.input_data_latch.value}")
+    dut._log.info(
+        f" DATA BUS BUFFER ENABLE:{dut.user_project.data_buffer_enable.value}"
+    )
+    dut._log.info(f" DATA BUS BUFFER:{dut.user_project.data_bus_buffer.value}")
+    dut._log.info(f" PC ENABLE:{dut.user_project.pc_enable.value}")
+    dut._log.info(f" PC:{dut.user_project.pc.value}")
+    dut._log.info(f" AB:{dut.user_project.ab.value}")
+    dut._log.info(f" INSTRUCTION:{dut.user_project.instruction_register.value}")
 
 
 def hex_to_num(hex_string):
