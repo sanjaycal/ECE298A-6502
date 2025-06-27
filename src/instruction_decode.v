@@ -39,7 +39,7 @@ localparam S_DBUF_OUTPUT    = 3'd5;
 //localparam T_6              = 3'd6;
 
 reg [2:0] STATE      = S_IDLE;
-reg [2:0] NEXT_STATE = S_IDLE;
+reg [2:0] NEXT_STATE;
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
