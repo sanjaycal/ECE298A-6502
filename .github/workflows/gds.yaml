@@ -19,7 +19,7 @@ jobs:
           pdk: ihp
 
   precheck:
-    # needs: gds
+    needs: gds
     runs-on: ubuntu-24.04
     steps:
       - name: Run Tiny Tapeout Precheck
@@ -28,7 +28,7 @@ jobs:
           pdk: ihp
 
   gl_test:
-    # needs: gds
+    needs: gds
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repo
@@ -42,7 +42,7 @@ jobs:
           pdk: ihp
 
   viewer:
-    # needs: gds
+    needs: gds
     runs-on: ubuntu-24.04
     permissions:
       pages: write # to deploy to Pages
