@@ -188,7 +188,7 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
         end
-        else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == OP_ASL_ZPG)) begin
+        else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ASL_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
         end
         else if(NEXT_STATE == S_ABS_HB) begin
