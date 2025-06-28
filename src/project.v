@@ -7,6 +7,8 @@
 `include "../src/interrupt_logic.v"
 `include "../src/alu.v"
 
+`include "../inc/buf_instructions.vh"
+
 `default_nettype none
 
 module tt_um_6502 (
@@ -26,7 +28,7 @@ module tt_um_6502 (
   wire [2:0] ALU_op;
   wire [3:0] accumulator_enable;
   wire pc_enable;
-  wire [1:0]input_data_latch_enable;
+  wire [1:0] input_data_latch_enable;
   wire rdy;
   wire rw;
   wire dbe;
@@ -40,18 +42,17 @@ module tt_um_6502 (
   wire clk_output;
   wire [1:0] address_select;
   wire [1:0] data_buffer_enable;
-  wire data_buffer_direction;
   wire processor_status_register_rw;
   wire [6:0] processor_status_register_read;
   wire [6:0] processor_status_register_write;
 
 
-  reg [7:0] address_register = 0;
   wire [15:0] ab;
 
-  reg [7:0] data_register;
-  wire [7:0] data_flags = 0; //data_flags[0]=RW, 0 is read, 1 is write
-  reg [7:0] data_bus_buffer;
+  reg [7:0] input_data_latch;
+  wire [7:0] internal_data_bus;
+  wire [7:0] alu_output_bus;
+  reg [7:0] data_bus_buffer=255;
 
   reg [15:0] pc;
   wire [15:0] memory_address;
@@ -62,7 +63,7 @@ module tt_um_6502 (
   reg [6:0] processor_status_register;
 
   wire [7:0] ALU_inputA;
-  reg [7:0] ALU_inputB;
+  wire [7:0] ALU_inputB;
 
   wire [7:0] ALU_output;
   wire [7:0] ALU_flags_output;
@@ -104,18 +105,21 @@ module tt_um_6502 (
 
   always @(posedge clk_cpu) begin
     if (rst_n == 0) begin
-      pc = 1;
-      accumulator = 0;
-      index_register_x = 0;
-      index_register_y = 0;
-      processor_status_register = 0;
+      pc <= 1;
+      accumulator <= 0;
+      index_register_x <= 0;
+      index_register_y <= 0;
+      processor_status_register <= 0;
     end else begin
-      data_bus_buffer <= (data_buffer_enable&!rw)?
-                          ((data_buffer_direction)?ALU_output:uio_in):
+      data_bus_buffer <= (data_buffer_enable!=2'b01)?
+                          alu_output_bus:
                           data_bus_buffer;
 
+      input_data_latch <= (input_data_latch_enable!=2'b01)?instruction_register:input_data_latch;
+
+
       if (pc_enable) begin
-        pc = pc+1;
+        pc <= pc+1;
       end
 
     end
@@ -127,16 +131,22 @@ module tt_um_6502 (
   assign nmi_in = 0;
   assign res_in = 0;
   assign processor_status_register_read = processor_status_register;
-  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, processor_status_register_rw, processor_status_register_read, processor_status_register_write};
+  wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, processor_status_register_rw, processor_status_register_read, processor_status_register_write, clk_output, ALU_flags_output};
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?{4'b0, data_buffer_enable,address_select, pc_enable, rw}:data_bus_buffer;
+  assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
   assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
 
   assign instruction_register = uio_in;
-  assign ALU_inputA = data_bus_buffer;
+  assign ALU_inputA = internal_data_bus;
+  assign ALU_inputB = internal_data_bus;
+
   assign ab = pc_enable?pc:(address_select?memory_address:11);
+
+  assign alu_output_bus = ALU_output;
+  assign internal_data_bus = (input_data_latch_enable!=2)?input_data_latch:
+                              0;
 
   assign rdy = rst_n;
 endmodule

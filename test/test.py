@@ -8,21 +8,34 @@ from cocotb.triggers import ClockCycles
 
 def print_info(dut):
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE STATE:{dut.user_project.instructionDecode.STATE.value}"
+        f" INSTRUCTION DECODE STATE:{dut.user_project.instructionDecode.STATE.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE NEXT STATE:{dut.user_project.instructionDecode.NEXT_STATE.value}"
+        f" INSTRUCTION DECODE NEXT STATE:{dut.user_project.instructionDecode.NEXT_STATE.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE MEMORY ADDRESS:{dut.user_project.instructionDecode.memory_address.value}"
+        f" INSTRUCTION DECODE MEMORY ADDRESS:{dut.user_project.instructionDecode.memory_address.value}"
     )
     dut._log.info(
-        f"CURRENT INSTRUCTION DECODE OPCODE:{dut.user_project.instructionDecode.OPCODE.value}"
+        f" INSTRUCTION DECODE OPCODE:{dut.user_project.instructionDecode.OPCODE.value}"
     )
-    dut._log.info(f"CURRENT PC ENABLE:{dut.user_project.pc_enable.value}")
-    dut._log.info(f"CURRENT PC:{dut.user_project.pc.value}")
-    dut._log.info(f"CURRENT AB:{dut.user_project.ab.value}")
-    dut._log.info(f"CURRENT INSTRUCTION:{dut.user_project.instruction_register.value}")
+    dut._log.info(f" ALU OP ENABLE:{dut.user_project.ALU_op.value}")
+    dut._log.info(f" ALU INPUT A:{dut.user_project.ALU_inputA.value}")
+    dut._log.info(f" ALU OUTPUT:{dut.user_project.alu_output_bus.value}")
+    dut._log.info(f" INTERNAL DATA BUS:{dut.user_project.internal_data_bus.value}")
+    dut._log.info(
+        f" INPUT DATA LATCH ENABLE:{dut.user_project.input_data_latch_enable.value}"
+    )
+    dut._log.info(f" INPUT DATA LATCH:{dut.user_project.input_data_latch.value}")
+    dut._log.info(
+        f" DATA BUS BUFFER ENABLE:{dut.user_project.data_buffer_enable.value}"
+    )
+    dut._log.info(f" DATA BUS BUFFER:{dut.user_project.data_bus_buffer.value}")
+    dut._log.info(f" PC ENABLE:{dut.user_project.pc_enable.value}")
+    dut._log.info(f" PC:{dut.user_project.pc.value}")
+    dut._log.info(f" AB:{dut.user_project.address_select.value}")
+    dut._log.info(f" AB:{dut.user_project.ab.value}")
+    dut._log.info(f" INSTRUCTION:{dut.user_project.instruction_register.value}")
 
 
 def hex_to_num(hex_string):
@@ -105,7 +118,7 @@ async def test_ASL_ZPG(dut):
 
     print_info(dut)
 
-    dut._log.info(f"------------STARTING STATE DONE-----------")
+    dut._log.info("------------STARTING STATE DONE-----------")
 
     # check that instructions are being read and that the PC is incrementing
     await ClockCycles(dut.clk, 1)
@@ -115,7 +128,7 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
     assert dut.uo_out.value == 1
 
-    dut._log.info(f"------------INSTRUCTION READ-----------")
+    dut._log.info("------------INSTRUCTION READ-----------")
 
     # tell it to read from memory address 0x0066
     dut.uio_in.value = hex_to_num("66")
@@ -126,7 +139,7 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
     assert dut.uo_out.value == hex_to_num("66")
 
-    dut._log.info(f"------------ADDRESS READ-----------")
+    dut._log.info("------------ADDRESS READ-----------")
 
     # when it tries to read from 0x0066 it should get 69 as the value
     dut.uio_in.value = 69
@@ -136,7 +149,7 @@ async def test_ASL_ZPG(dut):
     print_info(dut)
     # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info(f"------------DATA READ-----------")
+    dut._log.info("------------DATA READ-----------")
 
     # now we write from the ALU to the data bus buffer
     dut.uio_in.value = hex_to_num("00")
@@ -146,7 +159,7 @@ async def test_ASL_ZPG(dut):
     print_info(dut)
     # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info(f"------------ALU CALCULATED-----------")
+    dut._log.info("------------ALU CALCULATED-----------")
 
     # now we output 34(currently in the data buffer) to 0x066
     dut.uio_in.value = hex_to_num("00")
@@ -160,4 +173,4 @@ async def test_ASL_ZPG(dut):
     assert dut.uio_oe.value == 1  # check if the last bit is outputting
     assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066
 
-    dut._log.info(f"------------DONE-----------")
+    dut._log.info("------------DONE-----------")

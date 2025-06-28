@@ -24,8 +24,10 @@ module alu (
         endcase
     end
 
-    assign ALU_output = (alu_op==`ASL) ? 0:
-                        (inputA<<1);
+    assign ALU_output = (alu_op==`ASL) ? (inputA<<1):
+                        0;
     assign ALU_flags_output = ALU_flags_buffer;
+
+    wire _unused = &{inputB};
 
 endmodule

@@ -1,6 +1,8 @@
 `include "../inc/opcode.vh"
 `include "../inc/status_register.vh"
 
+`include "../inc/buf_instructions.vh"
+
 `include "../inc/alu_ops.vh"
 
 `default_nettype none
@@ -28,6 +30,7 @@ module instruction_decode (
     output reg [2:0] index_register_Y_enable
 );
 //STATES
+
 localparam S_IDLE           = 4'd0;
 localparam S_OPCODE_READ    = 4'd1;
 localparam S_ZPG_ABS_ADR_READ   = 4'd2;
@@ -67,8 +70,8 @@ always @(*) begin
     address_select = 1'b0;
     processor_status_register_rw = 1;
     rw = 1;
-    data_buffer_enable = BUF_IDLE_TWO;
-    input_data_latch_enable = BUF_IDLE_TWO;
+    data_buffer_enable = `BUF_IDLE_TWO;
+    input_data_latch_enable = `BUF_IDLE_TWO;
     pc_enable = 0;
     accumulator_enable = BUF_IDLE_THREE;
     stack_pointer_register_enable = BUF_IDLE_THREE;
@@ -183,11 +186,13 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ZPG;
             end else if(instruction[4:2] == `ADR_ABS) begin
                 ADDRESSING <= `ADR_ABS; // THIS DOES NOT HANDLE JUMP SUBROUTINE (JSR). THAT WILL NEED ITS OWN STATES IN THE SM!!!!
-            end else if(instruction == `ADR_A) begin
+            end else if(instruction[4:2] == `ADR_A) begin
                 ADDRESSING <= `ADR_A;
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
+        end else if (NEXT_STATE == S_ZPG_ADR_READ) begin
+            memory_address <= {8'b0, instruction}; // Puts the memory address read in adh/adl
         end
         else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ASL_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
@@ -197,6 +202,7 @@ always @(posedge clk ) begin
         end
     end
 end
-wire _unused = &{irq, nmi, processor_status_register_read };
+
+wire _unused = &{irq, nmi, processor_status_register_read};
 
 endmodule
