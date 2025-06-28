@@ -141,6 +141,7 @@ always @(*) begin
     S_DBUF_OUTPUT: begin
         data_buffer_enable = BUF_STORE_TWO;
         memory_address = MEMORY_ADDRESS;
+        address_select = 2'd1;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
@@ -155,7 +156,7 @@ always @(*) begin
     S_ALU_ADR_CALC_2: begin
         alu_enable = `TMX;
         if(OPCODE == `OP_ASL_ZPG_X) begin
-            address_select = 2'd3;
+            address_select = 2'd2;
             NEXT_STATE = S_IDL_DATA_WRITE;
         end
     end
