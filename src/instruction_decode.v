@@ -191,13 +191,9 @@ always @(posedge clk ) begin
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
-        end else if (NEXT_STATE == S_ZPG_ADR_READ) begin
-            memory_address <= {8'b0, instruction}; // Puts the memory address read in adh/adl
-        end
-        else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ASL_ZPG)) begin
+        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ASL_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
-        end
-        else if(NEXT_STATE == S_ABS_HB) begin
+        end else if(NEXT_STATE == S_ABS_HB) begin
             MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};
         end
     end
