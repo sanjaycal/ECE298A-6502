@@ -15,7 +15,7 @@ module instruction_decode (
     input  wire [6:0] processor_status_register_read,
     output reg [6:0] processor_status_register_write,        
     output reg [15:0] memory_address,  // better name for this
-    output reg       address_select,
+    output reg [1:0]    address_select, // 0 = PC, 1 = Memory Address (Remove?), 2 = ALU,
     output reg       processor_status_register_rw,
     output reg       rw, //1 for read, 0 for write
     output reg [1:0] data_buffer_enable, // 00 IDLE, 01 LOAD, 10 STORE
@@ -28,14 +28,16 @@ module instruction_decode (
     output reg [2:0] index_register_Y_enable
 );
 //STATES
-localparam S_IDLE           = 3'd0;
-localparam S_OPCODE_READ    = 3'd1;
-localparam S_ZPG_ADR_READ   = 3'd2;
-localparam S_IDL_WRITE      = 3'd3;
-localparam S_ALU_ZPG        = 3'd4;
-localparam S_DBUF_OUTPUT    = 3'd5;
-localparam S_ALU_A          = 3'd6;
-localparam S_ALU_TMX        = 3'd7;
+localparam S_IDLE           = 4'd0;
+localparam S_OPCODE_READ    = 4'd1;
+localparam S_ZPG_ADR_READ   = 4'd2;
+localparam S_IDL_DATA_WRITE = 4'd3;
+localparam S_IDL_ADR_WRITE  = 4'd9; // Sorry for breaking the neat order of the states.
+localparam S_ALU_FINAL      = 4'd4; // Final implies that the isn't anymore branching between this state and OPCODE_READ
+localparam S_DBUF_OUTPUT    = 4'd5;
+localparam S_ALU_TMX        = 4'd6;
+localparam S_ALU_ADR_CALC_1 = 4'd7;
+localparam S_ALU_ADR_CALC_2 = 4'd8;
 
 //BUFFER OPERATIONS
 localparam BUF_IDLE_TWO     = 2'b00;
@@ -77,12 +79,14 @@ always @(*) begin
         // In this state, we just need to increment the PC and decide where to go next.
         // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
         pc_enable = 1;   // Increment Program Counter
-        if(instruction[4:2] == `ADR_ZPG | instruction[4:2] == `ADR_ZPG_X) begin
+        if(instruction[4:2] == `ADR_ZPG) begin
             NEXT_STATE = S_ZPG_ADR_READ;
+        end else if(instruction[4:2] == `ADR_ZPG_X) begin
+            NEXT_STATE = S_IDL_ADR_WRITE;
         end else if(instruction[4:2] == `ADR_ABS) begin
-            NEXT_STATE = S_IDLE;
+            NEXT_STATE = S_IDLE;    // PLaceholder
         end else if(instruction == `ADR_A) begin
-            NEXT_STATE = S_ALU_A;   // This is a special case for accumulator operations. All Accumulator operations involve the ALU.
+            NEXT_STATE = S_ALU_FINAL;   // because this involves registers we can go straight to final
         end else if(instruction == `OP_NOP) begin
             NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
         end else begin
@@ -90,37 +94,43 @@ always @(*) begin
         end  
     end
     S_ZPG_ADR_READ: begin
-        memory_address = instruction; // Puts the memory address read in adh/adl
-        address_select = 1;
         if(ADDRESSING == `ADR_ZPG) begin
-            NEXT_STATE = S_IDL_WRITE;
-        end
-        else if(ADDRESSING == `ADR_ZPG_X) begin
-            NEXT_STATE = S_IDLE;//TODO
+            memory_address = instruction; // Puts the memory address read in adh/adl
+            address_select = 1;
+            NEXT_STATE = S_IDL_DATA_WRITE;
         end
     end
-    S_IDL_WRITE: begin
+    S_IDL_DATA_WRITE: begin
         input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ASL_ZPG) begin
-            NEXT_STATE = S_ALU_ZPG;
-        end    
+        if(OPCODE == `OP_ASL_ZPG | OPCODE == `OP_ASL_ZPG_X) begin
+            NEXT_STATE = S_ALU_FINAL;
+        end
     end
-    S_ALU_ZPG: begin
-        input_data_latch_enable = BUF_STORE_TWO;
+    S_IDL_ADR_WRITE: begin
+        input_data_latch_enable = BUF_IDLE_TWO;
+        if(OPCODE == `OP_ASL_ZPG_X) begin 
+            NEXT_STATE = S_ALU_ADR_CALC_1;
+        end   
+    end
+    S_ALU_FINAL: begin
         processor_status_register_rw = 0;
-        if(OPCODE == `OP_ASL_ZPG) begin
+        if(OPCODE == `OP_ASL_ZPG | `OP_ASL_ZPG_X) begin
+            input_data_latch_enable = BUF_STORE_TWO;
             alu_enable  = `ASL;
+            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+        end else if(OPCODE == `OP_ASL_A) begin
+            accumulator_enable = BUF_STORE2_THREE;
+            alu_enable = `ASL;
             processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
         end
         NEXT_STATE = S_ALU_TMX
     end
     S_ALU_TMX: begin
         alu_enable = `TMX;
-        if(ADDRESSING == ADR_ZPG) begin
+        if(ADDRESSING == `ADR_ZPG | ADDRESSING = `ADR_ZPG_X) begin
             data_buffer_enable = BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
-        end
-        if(ADDRESSING == ADR_A) begin
+        end else if(ADDRESSING == ADR_A) begin
             accumulator_enable = BUF_LOAD2_THREE;
             NEXT_STATE = S_OPCODE_READ;
         end
@@ -130,13 +140,20 @@ always @(*) begin
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
-    S_ALU_A: begin
-        processor_status_register_rw = 0;
-        if(OPCODE == `OP_ASL_A) begin
-            alu_enable = `ASL;
-            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+    S_ALU_ADR_CALC_1:  begin
+        alu_enable  = `ADR;
+        if(OPCODE == `OP_ASL_ZPG_X) begin
+            input_data_latch_enable = `BUF_STORE_TWO;
+            index_register_X_enable = `BUF_STORE2_THREE;
         end
-        NEXT_STATE = S_ALU_TMX;
+        NEXT_STATE = S_ALU_ADR_CALC_2;
+    end
+    S_ALU_ADR_CALC_2: begin
+        alu_enable = `TMX;
+        if(opcode == `OP_ASL_ZPG_X) begin
+            address_select = 3'd3;
+            NEXT_STATE = S_IDL_DATA_WRITE;
+        end
     end
     default: NEXT_STATE = S_IDLE;
     endcase

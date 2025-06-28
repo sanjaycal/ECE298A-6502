@@ -38,7 +38,7 @@ module tt_um_6502 (
   wire nmi;
   wire clk_cpu;
   wire clk_output;
-  wire address_select;
+  wire [1:0] address_select;
   wire [1:0] data_buffer_enable;
   wire data_buffer_direction;
   wire processor_status_register_rw;
