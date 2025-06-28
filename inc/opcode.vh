@@ -3,8 +3,9 @@
 
     //OPCODE
 
-    `define OP_ALU_SHIFT_ZPG 8'b0xx00110
-    `define OP_ALU_SHIFT_ZPG_X 8'b0XX10110
+    `define OP_ALU_SHIFT_ZPG    8'b0xx00110
+    `define OP_ALU_SHIFT_ZPG_X  8'b0XX10110
+    `define OP_ALU_SHIFT_ABS    8'b0xx01110
     `define OP_ASL          8'b000xxx10
     `define OP_ASL_ZPG      8'b00000110
     `define OP_ASL_A        8'b00001010

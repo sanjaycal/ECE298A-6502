@@ -108,7 +108,7 @@ always @(*) begin
     end
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ALU_SHIFT_ZPG || OPCODE == `OP_ALU_SHIFT_ZPG_X||  OPCODE == `OP_ASL_ABS) begin
+        if(OPCODE == `OP_ALU_SHIFT_ZPG || OPCODE == `OP_ALU_SHIFT_ZPG_X||  OPCODE == `OP_ALU_SHIFT_ABS) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
@@ -128,11 +128,11 @@ always @(*) begin
             accumulator_enable = BUF_STORE2_THREE;
             alu_enable = `ASL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
-        end else if(OPCODE == `OP_LSR_ZPG) begin
+        end else if(OPCODE == `OP_LSR_ZPG || OPCODE == `OP_LSR_ZPG_X || OPCODE == `OP_LSR_ABS) begin
             input_data_latch_enable = BUF_STORE_TWO;
             alu_enable  = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
-        end else if(OPCODE == `OP_LSR_A || OPCODE == `OP_LSR_ZPG_X) begin
+        end else if(OPCODE == `OP_LSR_A ) begin
             accumulator_enable = BUF_STORE2_THREE;
             alu_enable = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
