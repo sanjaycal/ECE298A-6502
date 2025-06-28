@@ -149,7 +149,7 @@ always @(*) begin
         NEXT_STATE = S_OPCODE_READ;
     end
     S_ALU_ADR_CALC_1:  begin
-        alu_enable  = `ADR;
+        alu_enable  = `ADD;
         if(OPCODE == `OP_ASL_ZPG_X) begin
             input_data_latch_enable = BUF_STORE_TWO;
             index_register_X_enable = BUF_STORE2_THREE;

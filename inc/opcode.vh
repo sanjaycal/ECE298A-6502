@@ -8,6 +8,12 @@
     `define OP_ASL_A        8'b00001010
     `define OP_ASL_ABS      8'b00001110
     `define OP_ASL_ZPG_X    8'b00010110
+    
+    `define OP_LSR          8'b010xxx10
+    `define OP_LSR_ZPG      8'b01000110
+    `define OP_LSR_A        8'b01001010
+    `define OP_LSR_ABS      8'b01001110
+    `define OP_LSR_ZPG_X    8'b01010110
 
     `define OP_JSR          8'b00100000
 
