@@ -61,7 +61,7 @@ reg [7:0] OPCODE;
 
 always @(*) begin
     NEXT_STATE = STATE;
-    alu_enable = NOP;
+    alu_enable = `NOP;
     processor_status_register_write = 7'b0;
     address_select = 1'b0;
     processor_status_register_rw = 1;
