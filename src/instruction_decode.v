@@ -127,7 +127,7 @@ always @(*) begin
             alu_enable = `ASL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
-        NEXT_STATE = S_ALU_TMX
+        NEXT_STATE = S_ALU_TMX;
     end
     S_ALU_TMX: begin
         alu_enable = `TMX;
