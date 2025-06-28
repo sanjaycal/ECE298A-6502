@@ -51,8 +51,8 @@ localparam BUF_LOAD2_THREE   = 3'b101; // Take from a BUS and keep
 localparam BUF_STORE1_THREE   = 3'b110; // Put the register value on a BUS
 localparam BUF_STORE2_THREE   = 3'b111; // Put the register value on a BUS
 
-reg [4:0] STATE      = S_IDLE;
-reg [4:0] NEXT_STATE = S_IDLE;
+reg [3:0] STATE      = S_IDLE;
+reg [3:0] NEXT_STATE = S_IDLE;
 reg [15:0] MEMORY_ADDRESS   = 15'b0; // Literally only used for one thing. Put this on the chopping block if needs be.
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
