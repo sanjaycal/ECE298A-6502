@@ -106,7 +106,7 @@ always @(*) begin
     end
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ASL_ZPG | OPCODE == `OP_ASL_ZPG_X | `OP_ASL_ABS) begin
+        if(OPCODE == `OP_ASL_ZPG || OPCODE == `OP_ASL_ZPG_X ||  OPCODE == `OP_ASL_ABS) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
@@ -118,23 +118,23 @@ always @(*) begin
     end
     S_ALU_FINAL: begin
         processor_status_register_rw = 0;
-        if(OPCODE == `OP_ASL_ZPG | `OP_ASL_ZPG_X | `OP_ASL_ABS) begin
+        if(OPCODE == `OP_ASL_ZPG ||OPCODE ==  `OP_ASL_ZPG_X || OPCODE == `OP_ASL_ABS) begin
             input_data_latch_enable = BUF_STORE_TWO;
             alu_enable  = `ASL;
-            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+            processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_ASL_A) begin
             accumulator_enable = BUF_STORE2_THREE;
             alu_enable = `ASL;
-            processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
+            processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
         NEXT_STATE = S_ALU_TMX
     end
     S_ALU_TMX: begin
         alu_enable = `TMX;
-        if(ADDRESSING == `ADR_ZPG | ADDRESSING = `ADR_ZPG_X | ADDRESSING == `ADR_ABS) begin
+        if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ZPG_X || ADDRESSING == `ADR_ABS) begin
             data_buffer_enable = BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
-        end else if(ADDRESSING == ADR_A) begin
+        end else if(ADDRESSING == `ADR_A) begin
             accumulator_enable = BUF_LOAD2_THREE;
             NEXT_STATE = S_OPCODE_READ;
         end
@@ -155,7 +155,7 @@ always @(*) begin
     S_ALU_ADR_CALC_2: begin
         alu_enable = `TMX;
         if(opcode == `OP_ASL_ZPG_X) begin
-            address_select = 3'd3;
+            address_select = 2'd3;
             NEXT_STATE = S_IDL_DATA_WRITE;
         end
     end
@@ -192,7 +192,7 @@ always @(posedge clk ) begin
             MEMORY_ADDRESS <= instruction;
         end
         else if(NEXT_STATE == S_ABS_HB) begin
-            MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS};
+            MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};
         end
     end
 end
