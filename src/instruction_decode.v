@@ -53,13 +53,14 @@ localparam BUF_STORE2_THREE   = 3'b111; // Put the register value on a BUS
 
 reg [3:0] STATE      = S_IDLE;
 reg [3:0] NEXT_STATE = S_IDLE;
-reg [15:0] MEMORY_ADDRESS   = 15'b0; // Literally only used for one thing. Put this on the chopping block if needs be.
+reg [15:0] MEMORY_ADDRESS   = 15'b0; 
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
 
 
 always @(*) begin
+    memory_address = 16'b0;
     NEXT_STATE = STATE;
     alu_enable = `NOP;
     processor_status_register_write = 7'b0;
@@ -98,10 +99,8 @@ always @(*) begin
     S_ZPG_ABS_ADR_READ: begin
         address_select = 1;
         NEXT_STATE = S_IDL_DATA_WRITE;
-        if(ADDRESSING == `ADR_ZPG) begin
-            memory_address = instruction; // Puts the memory address read in adh/adl
-        end else if(ADDRESSING == `ADR_ABS) begin
-            memory_address = MEMORY_ADDRESS;
+        if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ABS) begin
+            memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         end
     end
     S_IDL_DATA_WRITE: begin
@@ -141,6 +140,7 @@ always @(*) begin
     end 
     S_DBUF_OUTPUT: begin
         data_buffer_enable = BUF_STORE_TWO;
+        memory_address = MEMORY_ADDRESS;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
     end
@@ -188,7 +188,7 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
         end
-        else if(NEXT_STATE == S_ABS_LB ) begin
+        else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == OP_ASL_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
         end
         else if(NEXT_STATE == S_ABS_HB) begin
