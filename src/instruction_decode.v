@@ -101,14 +101,14 @@ always @(*) begin
     end
     S_ZPG_ABS_ADR_READ: begin
         address_select = 1;
-        NEXT_STATE = S_IDL_DATA_WRITE;
         if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ABS) begin
             memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         end
+        NEXT_STATE = S_IDL_DATA_WRITE;
     end
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ASL_ZPG || OPCODE == `OP_ASL_ZPG_X ||  OPCODE == `OP_ASL_ABS) begin
+        if(OPCODE == `OP_ALU_SHIFT_ZPG || OPCODE == `OP_ASL_ZPG_X ||  OPCODE == `OP_ASL_ABS) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
@@ -120,13 +120,17 @@ always @(*) begin
     end
     S_ALU_FINAL: begin
         processor_status_register_rw = 0;
-        if(OPCODE == `OP_ASL_ZPG ||OPCODE ==  `OP_ASL_ZPG_X || OPCODE == `OP_ASL_ABS) begin
+        if(OPCODE == `OP_ASL_ZPG || OPCODE ==  `OP_ASL_ZPG_X || OPCODE == `OP_ASL_ABS) begin
             input_data_latch_enable = BUF_STORE_TWO;
             alu_enable  = `ASL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_ASL_A) begin
             accumulator_enable = BUF_STORE2_THREE;
             alu_enable = `ASL;
+            processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
+        end else if(OPCODE == `OP_LSR_ZPG) begin
+            input_data_latch_enable = BUF_STORE_TWO;
+            alu_enable  = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
         NEXT_STATE = S_ALU_TMX;
@@ -191,7 +195,7 @@ always @(posedge clk ) begin
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
-        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ASL_ZPG)) begin
+        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ALU_SHIFT_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
         end else if(NEXT_STATE == S_ABS_HB) begin
             MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};
