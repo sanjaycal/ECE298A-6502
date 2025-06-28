@@ -154,7 +154,7 @@ always @(*) begin
     end
     S_ALU_ADR_CALC_2: begin
         alu_enable = `TMX;
-        if(opcode == `OP_ASL_ZPG_X) begin
+        if(OPCODE == `OP_ASL_ZPG_X) begin
             address_select = 2'd3;
             NEXT_STATE = S_IDL_DATA_WRITE;
         end
