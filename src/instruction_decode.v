@@ -30,14 +30,16 @@ module instruction_decode (
 //STATES
 localparam S_IDLE           = 4'd0;
 localparam S_OPCODE_READ    = 4'd1;
-localparam S_ZPG_ADR_READ   = 4'd2;
+localparam S_ZPG_ABS_ADR_READ   = 4'd2;
 localparam S_IDL_DATA_WRITE = 4'd3;
-localparam S_IDL_ADR_WRITE  = 4'd9; // Sorry for breaking the neat order of the states.
-localparam S_ALU_FINAL      = 4'd4; // Final implies that the isn't anymore branching between this state and OPCODE_READ
-localparam S_DBUF_OUTPUT    = 4'd5;
-localparam S_ALU_TMX        = 4'd6;
-localparam S_ALU_ADR_CALC_1 = 4'd7;
-localparam S_ALU_ADR_CALC_2 = 4'd8;
+localparam S_IDL_ADR_WRITE  = 4'd4; 
+localparam S_ALU_FINAL      = 4'd5; // Final implies that the isn't anymore branching between this state and OPCODE_READ
+localparam S_DBUF_OUTPUT    = 4'd6;
+localparam S_ALU_TMX        = 4'd7;
+localparam S_ALU_ADR_CALC_1 = 4'd8;
+localparam S_ALU_ADR_CALC_2 = 4'd9;
+localparam S_ABS_LB         = 4'd10;
+localparam S_ABS_HB         = 4'd11;
 
 //BUFFER OPERATIONS
 localparam BUF_IDLE_TWO     = 2'b00;
@@ -51,6 +53,7 @@ localparam BUF_STORE2_THREE   = 3'b111; // Put the register value on a BUS
 
 reg [4:0] STATE      = S_IDLE;
 reg [4:0] NEXT_STATE = S_IDLE;
+reg [15:0] MEMORY_ADDRESS   = 15'b0; // Literally only used for one thing. Put this on the chopping block if needs be.
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
@@ -58,7 +61,6 @@ reg [7:0] OPCODE;
 
 always @(*) begin
     NEXT_STATE = STATE;
-    memory_address = 16'b0;
     alu_enable = NOP;
     processor_status_register_write = 7'b0;
     address_select = 1'b0;
@@ -80,11 +82,11 @@ always @(*) begin
         // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
         pc_enable = 1;   // Increment Program Counter
         if(instruction[4:2] == `ADR_ZPG) begin
-            NEXT_STATE = S_ZPG_ADR_READ;
+            NEXT_STATE = S_ZPG_ABS_ADR_READ;
         end else if(instruction[4:2] == `ADR_ZPG_X) begin
             NEXT_STATE = S_IDL_ADR_WRITE;
         end else if(instruction[4:2] == `ADR_ABS) begin
-            NEXT_STATE = S_IDLE;    // PLaceholder
+            NEXT_STATE = S_ABS_LB;
         end else if(instruction == `ADR_A) begin
             NEXT_STATE = S_ALU_FINAL;   // because this involves registers we can go straight to final
         end else if(instruction == `OP_NOP) begin
@@ -93,16 +95,18 @@ always @(*) begin
             NEXT_STATE = S_IDLE; // Default case, should not happen.
         end  
     end
-    S_ZPG_ADR_READ: begin
+    S_ZPG_ABS_ADR_READ: begin
+        address_select = 1;
+        NEXT_STATE = S_IDL_DATA_WRITE;
         if(ADDRESSING == `ADR_ZPG) begin
             memory_address = instruction; // Puts the memory address read in adh/adl
-            address_select = 1;
-            NEXT_STATE = S_IDL_DATA_WRITE;
+        end else if(ADDRESSING == `ADR_ABS) begin
+            memory_address = MEMORY_ADDRESS;
         end
     end
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ASL_ZPG | OPCODE == `OP_ASL_ZPG_X) begin
+        if(OPCODE == `OP_ASL_ZPG | OPCODE == `OP_ASL_ZPG_X | `OP_ASL_ABS) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
@@ -114,7 +118,7 @@ always @(*) begin
     end
     S_ALU_FINAL: begin
         processor_status_register_rw = 0;
-        if(OPCODE == `OP_ASL_ZPG | `OP_ASL_ZPG_X) begin
+        if(OPCODE == `OP_ASL_ZPG | `OP_ASL_ZPG_X | `OP_ASL_ABS) begin
             input_data_latch_enable = BUF_STORE_TWO;
             alu_enable  = `ASL;
             processor_status_register_write = `CARRY_FLAG + `ZERO_FLAG + `NEGATIVE_FLAG;
@@ -127,7 +131,7 @@ always @(*) begin
     end
     S_ALU_TMX: begin
         alu_enable = `TMX;
-        if(ADDRESSING == `ADR_ZPG | ADDRESSING = `ADR_ZPG_X) begin
+        if(ADDRESSING == `ADR_ZPG | ADDRESSING = `ADR_ZPG_X | ADDRESSING == `ADR_ABS) begin
             data_buffer_enable = BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
         end else if(ADDRESSING == ADR_A) begin
@@ -155,6 +159,12 @@ always @(*) begin
             NEXT_STATE = S_IDL_DATA_WRITE;
         end
     end
+    S_ABS_LB: begin
+        NEXT_STATE = S_ABS_HB;
+    end
+    S_ABS_HB: begin
+        NEXT_STATE = S_ZPG_ABS_ADR_READ;
+    end
     default: NEXT_STATE = S_IDLE;
     endcase
 end
@@ -177,6 +187,12 @@ always @(posedge clk ) begin
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
+        end
+        else if(NEXT_STATE == S_ABS_LB ) begin
+            MEMORY_ADDRESS <= instruction;
+        end
+        else if(NEXT_STATE == S_ABS_HB) begin
+            MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS};
         end
     end
 end
