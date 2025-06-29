@@ -136,6 +136,10 @@ always @(*) begin
             accumulator_enable = BUF_STORE2_THREE;
             alu_enable = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
+        end else if(OPCODE == `OP_ROL_ZPG) begin
+            input_data_latch_enable = BUF_STORE_TWO;
+            alu_enable = `ROL;
+            processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
         NEXT_STATE = S_ALU_TMX;
     end
