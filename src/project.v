@@ -62,7 +62,7 @@ module tt_um_6502 (
   wire [7:0] instruction_register;
   reg [6:0] processor_status_register;
 
-  wire [7:0] ALU_inputA;
+  reg [7:0] ALU_inputA;
   wire [7:0] ALU_inputB;
 
   wire [7:0] ALU_output;
@@ -111,6 +111,7 @@ module tt_um_6502 (
       index_register_y <= 0;
       processor_status_register <= 0;
     end else begin
+      ALU_inputA <= internal_data_bus;
       data_bus_buffer <= (data_buffer_enable!=2'b01)?
                           alu_output_bus:
                           data_bus_buffer;
@@ -139,7 +140,6 @@ module tt_um_6502 (
   assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
 
   assign instruction_register = uio_in;
-  assign ALU_inputA = internal_data_bus;
   assign ALU_inputB = internal_data_bus;
 
   assign ab = pc_enable?pc:(address_select?memory_address:11);

@@ -19,6 +19,9 @@ def print_info(dut):
     dut._log.info(
         f" INSTRUCTION DECODE OPCODE:{dut.user_project.instructionDecode.OPCODE.value}"
     )
+    dut._log.info(
+        f" INSTRUCTION DECODE DATA BUFFER ENABLE:{dut.user_project.instructionDecode.data_buffer_enable.value}"
+    )
     dut._log.info(f" ALU OP ENABLE:{dut.user_project.ALU_op.value}")
     dut._log.info(f" ALU INPUT A:{dut.user_project.ALU_inputA.value}")
     dut._log.info(f" ALU OUTPUT:{dut.user_project.alu_output_bus.value}")
