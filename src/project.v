@@ -2,12 +2,26 @@
  * Copyright (c) 2024 Your Name
  * SPDX-License-Identifier: Apache-2.0
  */
+
+ 
+`include "../inc/alu_ops.vh"
+
+  localparam BUF_IDLE_TWO      = 2'b00;
+  localparam BUF_LOAD_TWO      = 2'b01; // Take from a BUS and keep
+  localparam BUF_STORE_TWO     = 2'b10; // Put the register value on a BUS
+  
+  localparam BUF_IDLE_THREE    = 3'b000;
+  localparam BUF_LOAD1_THREE   = 3'b100; // Take from a BUS and keep
+  localparam BUF_LOAD2_THREE   = 3'b101; // Take from a BUS and keep
+  localparam BUF_STORE1_THREE  = 3'b110; // Put the register value on a BUS
+  localparam BUF_STORE2_THREE  = 3'b111; // Put the register value on a BUS
+
+
 `include "../src/clock_generator.v"
 `include "../src/instruction_decode.v"
 `include "../src/interrupt_logic.v"
 `include "../src/alu.v"
 
-`include "../inc/buf_instructions.vh"
 
 `default_nettype none
 
@@ -25,8 +39,8 @@ module tt_um_6502 (
   wire [2:0] index_register_y_enable;
   wire [2:0] index_register_x_enable;
   wire [2:0] stack_pointer_register_enable;
-  wire [2:0] ALU_op;
-  wire [3:0] accumulator_enable;
+  wire [3:0] ALU_op;
+  wire [2:0] accumulator_enable;
   wire pc_enable;
   wire [1:0] input_data_latch_enable;
   wire rdy;
@@ -47,12 +61,12 @@ module tt_um_6502 (
   wire [6:0] processor_status_register_write;
 
 
-  wire [15:0] ab;
+  reg [15:0] ab;
 
   reg [7:0] input_data_latch;
-  wire [7:0] internal_data_bus;
-  wire [7:0] alu_output_bus;
-  reg [7:0] data_bus_buffer=255;
+  reg [7:0] internal_data_bus;
+  reg [7:0] alu_output_bus;
+  reg [7:0] data_bus_buffer=8'b0;
 
   reg [15:0] pc;
   wire [15:0] memory_address;
@@ -61,6 +75,13 @@ module tt_um_6502 (
   reg [7:0] index_register_y;
   wire [7:0] instruction_register;
   reg [6:0] processor_status_register;
+
+
+  reg [7:0] next_accumulator;
+  reg [7:0] next_index_register_x;
+  reg [7:0] next_index_register_y;
+  reg [7:0] next_data_bus_buffer;
+  reg [7:0] next_processor_status_register;
 
   wire [7:0] ALU_inputA;
   wire [7:0] ALU_inputB;
@@ -93,6 +114,7 @@ module tt_um_6502 (
   );
   
   alu ALU(
+    clk_cpu,
     ALU_op,
     ALU_inputA,
     ALU_inputB,
@@ -102,26 +124,100 @@ module tt_um_6502 (
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
 
+  always @(*) begin
+    internal_data_bus = 8'h00;
+    alu_output_bus    = 8'h00;
+    next_accumulator = accumulator;
+    next_index_register_x = index_register_x;
+    next_index_register_y = index_register_y;
+    next_data_bus_buffer = data_bus_buffer;
+    next_processor_status_register = processor_status_register;
+    //putting data on the bus 1
+    if(input_data_latch_enable == BUF_STORE_TWO) begin
+      internal_data_bus = input_data_latch;
+    end else if(accumulator_enable == BUF_STORE1_THREE) begin
+      internal_data_bus = accumulator;
+    end else if(index_register_x_enable == BUF_STORE1_THREE) begin
+      internal_data_bus = index_register_x;
+    end else if(index_register_y_enable == BUF_STORE1_THREE) begin
+      internal_data_bus = index_register_y;
+    end
+    //reading data from the bus 1
+    if(accumulator_enable == BUF_LOAD1_THREE) begin
+       next_accumulator = internal_data_bus;
+    end
+    if(index_register_x_enable == BUF_LOAD1_THREE) begin
+      next_index_register_x = internal_data_bus;
+    end
+    if(index_register_y_enable == BUF_LOAD1_THREE) begin
+      next_index_register_y = internal_data_bus;
+    end
+    //putting data on the bus 2
+    if(ALU_op == `TMX) begin
+      alu_output_bus = ALU_output;
+    end else if(accumulator_enable == BUF_STORE2_THREE) begin
+      alu_output_bus = accumulator;
+    end else if(index_register_x_enable == BUF_STORE2_THREE) begin
+      alu_output_bus = index_register_x;
+    end else if(index_register_y_enable == BUF_STORE2_THREE) begin
+      alu_output_bus = index_register_y;
+    end
+    //reading data from the bus 2
+    if(data_buffer_enable == BUF_LOAD_TWO) begin
+      next_data_bus_buffer = alu_output_bus;
+    end
+    if(accumulator_enable == BUF_LOAD2_THREE) begin
+       next_accumulator = alu_output_bus;
+    end
+    if(index_register_x_enable == BUF_LOAD2_THREE) begin
+      next_index_register_x = alu_output_bus;
+    end
+    if(index_register_y_enable == BUF_LOAD2_THREE) begin
+      next_index_register_y = alu_output_bus;
+    end
+    //alu stuff
+    if(ALU_op != `NOP && ALU_op != `TMX) begin
+
+      next_processor_status_register = ALU_flags_output | processor_status_register_write;
+    end
+  end
 
   always @(posedge clk_cpu) begin
     if (rst_n == 0) begin
       pc <= 1;
-      accumulator <= 0;
-      index_register_x <= 0;
-      index_register_y <= 0;
-      processor_status_register <= 0;
+      input_data_latch <= 8'b0;
+      
     end else begin
-      data_bus_buffer <= (data_buffer_enable!=2'b01)?
-                          alu_output_bus:
-                          data_bus_buffer;
 
-      input_data_latch <= (input_data_latch_enable!=2'b01)?instruction_register:input_data_latch;
+
+
 
 
       if (pc_enable) begin
         pc <= pc+1;
       end
 
+    end
+  end
+  // assign input_data_latch = (input_data_latch_enable == BUF_LOAD_TWO) ? instruction_register : input_data_latch;
+  always @(negedge clk_cpu) begin
+    if (rst_n == 0) begin
+      accumulator <= 0;
+      index_register_x <= 0;
+      index_register_y <= 0;
+      processor_status_register <= 0;
+    end else begin
+    // if(rw == 0 && data_buffer_enable == BUF_STORE_TWO) begin
+    //   uio_out <= data_bus_buffer;
+    // end
+      data_bus_buffer <= next_data_bus_buffer;
+      index_register_x <= next_index_register_x;
+      index_register_y <= next_index_register_y;
+      accumulator <= next_accumulator;
+      processor_status_register <= next_processor_status_register;
+      if(input_data_latch_enable == 1) begin
+        input_data_latch <= uio_in;
+      end
     end
   end
 
@@ -135,18 +231,26 @@ module tt_um_6502 (
 
   // All output pins must be assigned. If not used, assign to 0.
   assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?{7'b0, rw}:data_bus_buffer;
-  assign uio_oe  = clk_cpu?8'h1:(rw?8'hff:8'h00);
+  assign uio_out = clk_cpu?(data_buffer_enable == 2'd2 ? data_bus_buffer : {7'b0,rw} ) : {7'b0,rw} ;
+  assign uio_oe  = rw?8'hff:8'h00;
 
+assign ALU_inputA = internal_data_bus;
+assign ALU_inputB = alu_output_bus;
+
+// The address bus mux
+always @(*) begin
+    case (address_select)
+        2'b00:   ab = pc;
+        2'b01:   ab = memory_address;
+        2'b10:   ab = {8'h0, ALU_output};
+        default: ab = 16'b0;
+    endcase
+end
+            
   assign instruction_register = uio_in;
-  assign ALU_inputA = internal_data_bus;
-  assign ALU_inputB = internal_data_bus;
-
-  assign ab = pc_enable?pc:(address_select?memory_address:11);
-
-  assign alu_output_bus = ALU_output;
-  assign internal_data_bus = (input_data_latch_enable!=2)?input_data_latch:
-                              0;
 
   assign rdy = rst_n;
+
+
+
 endmodule
