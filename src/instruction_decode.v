@@ -45,18 +45,10 @@ localparam S_ABS_LB         = 4'd10;
 localparam S_ABS_HB         = 4'd11;
 
 //BUFFER OPERATIONS
-localparam BUF_IDLE_TWO     = 2'b00;
-localparam BUF_LOAD_TWO     = 2'b01; // Take from a BUS and keep
-localparam BUF_STORE_TWO    = 2'b10; // Put the register value on a BUS
-localparam BUF_IDLE_THREE   = 3'b000;
-localparam BUF_LOAD1_THREE   = 3'b100; // Take from a BUS and keep
-localparam BUF_LOAD2_THREE   = 3'b101; // Take from a BUS and keep
-localparam BUF_STORE1_THREE   = 3'b110; // Put the register value on a BUS
-localparam BUF_STORE2_THREE   = 3'b111; // Put the register value on a BUS
 
 reg [3:0] STATE      = S_IDLE;
 reg [3:0] NEXT_STATE = S_IDLE;
-reg [15:0] MEMORY_ADDRESS   = 15'b0; 
+reg [15:0] MEMORY_ADDRESS   = 16'b0; 
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 
@@ -73,10 +65,10 @@ always @(*) begin
     data_buffer_enable = `BUF_IDLE_TWO;
     input_data_latch_enable = `BUF_IDLE_TWO;
     pc_enable = 0;
-    accumulator_enable = BUF_IDLE_THREE;
-    stack_pointer_register_enable = BUF_IDLE_THREE;
-    index_register_X_enable = BUF_IDLE_THREE;
-    index_register_Y_enable = BUF_IDLE_THREE;
+    accumulator_enable = `BUF_IDLE_THREE;
+    stack_pointer_register_enable = `BUF_IDLE_THREE;
+    index_register_X_enable = `BUF_IDLE_THREE;
+    index_register_Y_enable = `BUF_IDLE_THREE;
     case(STATE)
     S_IDLE: begin
         NEXT_STATE = S_OPCODE_READ;
@@ -107,33 +99,33 @@ always @(*) begin
         NEXT_STATE = S_IDL_DATA_WRITE;
     end
     S_IDL_DATA_WRITE: begin
-        input_data_latch_enable = BUF_LOAD_TWO;
-        if(OPCODE == `OP_ALU_SHIFT_ZPG || OPCODE == `OP_ALU_SHIFT_ZPG_X||  OPCODE == `OP_ALU_SHIFT_ABS) begin
+        input_data_latch_enable = `BUF_LOAD_TWO;
+        if((OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG || (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG_X||  (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ABS) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
     S_IDL_ADR_WRITE: begin
-        input_data_latch_enable = BUF_IDLE_TWO;
-        if(OPCODE == `OP_ALU_SHIFT_ZPG_X) begin 
+        input_data_latch_enable = `BUF_IDLE_TWO;
+        if((OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG_X) begin 
             NEXT_STATE = S_ALU_ADR_CALC_1;
         end   
     end
     S_ALU_FINAL: begin
         processor_status_register_rw = 0;
         if(OPCODE == `OP_ASL_ZPG || OPCODE ==  `OP_ASL_ZPG_X || OPCODE == `OP_ASL_ABS) begin
-            input_data_latch_enable = BUF_STORE_TWO;
+            input_data_latch_enable = `BUF_STORE_TWO;
             alu_enable  = `ASL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_ASL_A) begin
-            accumulator_enable = BUF_STORE2_THREE;
+            accumulator_enable = `BUF_STORE2_THREE;
             alu_enable = `ASL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_LSR_ZPG || OPCODE == `OP_LSR_ZPG_X || OPCODE == `OP_LSR_ABS) begin
-            input_data_latch_enable = BUF_STORE_TWO;
+            input_data_latch_enable = `BUF_STORE_TWO;
             alu_enable  = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_LSR_A ) begin
-            accumulator_enable = BUF_STORE2_THREE;
+            accumulator_enable = `BUF_STORE2_THREE;
             alu_enable = `LSR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
@@ -142,15 +134,15 @@ always @(*) begin
     S_ALU_TMX: begin
         alu_enable = `TMX;
         if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ZPG_X || ADDRESSING == `ADR_ABS) begin
-            data_buffer_enable = BUF_LOAD_TWO;
+            data_buffer_enable = `BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
         end else if(ADDRESSING == `ADR_A) begin
-            accumulator_enable = BUF_LOAD2_THREE;
+            accumulator_enable = `BUF_LOAD2_THREE;
             NEXT_STATE = S_OPCODE_READ;
         end
     end 
     S_DBUF_OUTPUT: begin
-        data_buffer_enable = BUF_STORE_TWO;
+        data_buffer_enable = `BUF_STORE_TWO;
         memory_address = MEMORY_ADDRESS;
         address_select = 2'd1;
         rw = 0;
@@ -158,15 +150,15 @@ always @(*) begin
     end
     S_ALU_ADR_CALC_1:  begin
         alu_enable  = `ADD;
-        if(OPCODE == `OP_ALU_SHIFT_ZPG_X) begin
-            input_data_latch_enable = BUF_STORE_TWO;
-            index_register_X_enable = BUF_STORE2_THREE;
+        if((OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG_X) begin
+            input_data_latch_enable = `BUF_STORE_TWO;
+            index_register_X_enable = `BUF_STORE2_THREE;
         end
         NEXT_STATE = S_ALU_ADR_CALC_2;
     end
     S_ALU_ADR_CALC_2: begin
         alu_enable = `TMX;
-        if(OPCODE == `OP_ALU_SHIFT_ZPG_X) begin
+        if((OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG_X) begin
             address_select = 2'd2;
             NEXT_STATE = S_IDL_DATA_WRITE;
         end
@@ -199,7 +191,7 @@ always @(posedge clk ) begin
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
-        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && OPCODE == `OP_ALU_SHIFT_ZPG)) begin
+        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG)) begin
             MEMORY_ADDRESS <= instruction;
         end else if(NEXT_STATE == S_ABS_HB) begin
             MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};
