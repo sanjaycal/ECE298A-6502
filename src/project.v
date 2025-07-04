@@ -76,7 +76,6 @@ module tt_um_6502 (
   wire [7:0] instruction_register;
   reg [6:0] processor_status_register;
 
-
   reg [7:0] next_accumulator;
   reg [7:0] next_index_register_x;
   reg [7:0] next_index_register_y;
@@ -188,7 +187,6 @@ module tt_um_6502 (
       input_data_latch <= 8'b0;
       
     end else begin
-
 
 
 
