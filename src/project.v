@@ -81,7 +81,7 @@ module tt_um_6502 (
   reg [7:0] next_index_register_x;
   reg [7:0] next_index_register_y;
   reg [7:0] next_data_bus_buffer;
-  reg [7:0] next_processor_status_register;
+  reg [6:0] next_processor_status_register;
 
   wire [7:0] ALU_inputA;
   wire [7:0] ALU_inputB;
@@ -185,7 +185,6 @@ module tt_um_6502 (
   always @(posedge clk_cpu) begin
     if (rst_n == 0) begin
       pc <= 1;
-      input_data_latch <= 8'b0;
       
     end else begin
 
@@ -205,6 +204,8 @@ module tt_um_6502 (
       index_register_x <= 0;
       index_register_y <= 0;
       processor_status_register <= 0;
+      input_data_latch <= 8'b0;
+
     end else begin
     // if(rw == 0 && data_buffer_enable == BUF_STORE_TWO) begin
     //   uio_out <= data_bus_buffer;
