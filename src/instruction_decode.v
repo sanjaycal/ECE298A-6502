@@ -147,6 +147,7 @@ always @(*) begin
         address_select = 2'd1;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
+        pc_enable = 1;
     end
     S_ALU_ADR_CALC_1:  begin
         alu_enable  = `ADD;
