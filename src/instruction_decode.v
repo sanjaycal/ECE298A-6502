@@ -59,7 +59,7 @@ always @(*) begin
     NEXT_STATE = STATE;
     alu_enable = `NOP;
     processor_status_register_write = 7'b0;
-    address_select = 1'b0;
+    address_select = 2'b00;
     processor_status_register_rw = 1;
     rw = 1;
     data_buffer_enable = `BUF_IDLE_TWO;
@@ -83,7 +83,7 @@ always @(*) begin
             NEXT_STATE = S_IDL_ADR_WRITE;
         end else if(instruction[4:2] == `ADR_ABS) begin
             NEXT_STATE = S_ABS_LB;
-        end else if(instruction == `ADR_A) begin
+        end else if(instruction[4:2] == `ADR_A) begin
             NEXT_STATE = S_ALU_FINAL;   // because this involves registers we can go straight to final
         end else if(instruction == `OP_NOP) begin
             NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
@@ -192,7 +192,7 @@ always @(posedge clk ) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
         end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG)) begin
-            MEMORY_ADDRESS <= instruction;
+            MEMORY_ADDRESS <= {8'h00, instruction};
         end else if(NEXT_STATE == S_ABS_HB) begin
             MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};
         end
