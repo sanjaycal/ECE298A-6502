@@ -6,6 +6,7 @@
  
 `include "../inc/alu_ops.vh"
 
+
   localparam BUF_IDLE_TWO      = 2'b00;
   localparam BUF_LOAD_TWO      = 2'b01; // Take from a BUS and keep
   localparam BUF_STORE_TWO     = 2'b10; // Put the register value on a BUS
