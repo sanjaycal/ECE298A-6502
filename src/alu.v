@@ -4,35 +4,50 @@
 `default_nettype none
 
 module alu (
-    input  wire         clk, // You will need a clock for the registers
+    input  wire         clk, 
     input  wire [3:0]   alu_op,
     input  wire [7:0]   inputA,
     input  wire [7:0]   inputB,
-    output reg  [7:0]   ALU_output,       // Make this a 'reg' driven by the sequential block
-    output reg  [7:0]   ALU_flags_output  // Make this a 'reg' driven by the sequential block
+    input  wire [6:0]   status_flags_in,
+    output reg  [7:0]   ALU_output,
+    output reg  [6:0]   ALU_flags_output  
 );
 
-    // --- Combinational "Pre-calculation" Wires ---
     // These calculate the result for every possible operation, all the time.
     wire [7:0] result_asl = inputA << 1;
-    // wire [7:0] result_adc = inputA + inputB + C_in; // Example for another op
+    wire [7:0] result_lsr = inputA >> 1;
+    wire [7:0] result_rol = {inputA[6:0], status_flags_in[`CARRY_FLAG]};
+    wire [7:0] result_ror = {status_flags_in[`CARRY_FLAG],inputA[7:1]};
 
-    // --- Combinational Logic for selecting the result and flags ---
     reg [7:0] next_alu_result = 8'b0;
     reg [7:0] next_alu_flags = 8'b0;
     always @(*) begin
-        // Start with safe defaults
 
         case(alu_op)
             `ASL: begin
-                // Select the pre-calculated result
                 next_alu_result = result_asl;
-                // Set flags based on the inputs and the result
                 next_alu_flags[`CARRY_FLAG]    = inputA[7];
                 next_alu_flags[`ZERO_FLAG]     = (result_asl == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_asl[7];
             end
-            // `ADC: begin ... end // Example for another op
+            `LSR: begin
+                next_alu_result = result_lsr;
+                next_alu_flags[`CARRY_FLAG]    = inputA[7];
+                next_alu_flags[`ZERO_FLAG]     = (result_lsr == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_lsr[7];  // This is physically impossible but apparently they set it like that so whatever.
+            end
+            `ROL: begin
+                next_alu_result = result_rol;
+                next_alu_flags[`CARRY_FLAG]    = inputA[7];
+                next_alu_flags[`ZERO_FLAG]     = (result_rol == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_rol[7];
+            end
+            `ROR: begin
+                next_alu_result = result_rol;
+                next_alu_flags[`CARRY_FLAG]    = inputA[0];
+                next_alu_flags[`ZERO_FLAG]     = (result_ror == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_ror[7];
+            end
             // If need be add a condition that checks for tmx
             default: begin
                 next_alu_result = 8'b0;
