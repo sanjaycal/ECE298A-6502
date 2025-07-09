@@ -178,7 +178,8 @@ always @(*) begin
         NEXT_STATE = S_ABS_HB;
     end
     S_ABS_HB: begin
-        NEXT_STATE = S_ZPG_ABS_ADR_READ;
+        NEXT_STATE = S_IDL_DATA_WRITE;
+        memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         address_select = 1;
     end
     default: NEXT_STATE = S_IDLE;

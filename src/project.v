@@ -231,8 +231,8 @@ module tt_um_6502 (
   wire _unused = &{ena, 1'b0, ui_in, index_register_y_enable, index_register_x_enable, accumulator_enable, input_data_latch_enable, dbe, accumulator, index_register_x, index_register_y, stack_pointer_register_enable, processor_status_register_rw, processor_status_register_read, processor_status_register_write, clk_output, ALU_flags_output};
 
   // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out = clk_cpu?ab[7:0]:ab[15:8];
-  assign uio_out = clk_cpu?(data_buffer_enable == 2'd2 ? data_bus_buffer : 8'b101 ) : {7'b0,rw} ;
+  assign uo_out = clk_cpu?ab[15:8]:ab[7:0];
+  assign uio_out = clk_cpu?(data_buffer_enable == 2'd2 ? data_bus_buffer : 8'b0 ) : {7'b0,rw} ;
   assign uio_oe  = rw?8'h00:8'hff;
 
 assign ALU_inputA = internal_data_bus;
