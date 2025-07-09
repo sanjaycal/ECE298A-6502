@@ -15,6 +15,7 @@ module alu (
 
     // These calculate the result for every possible operation, all the time.
     wire [7:0] result_asl = inputA << 1;
+    wire [7:0] result_lsr = inputA >> 1;
     wire [7:0] result_rol = {inputA[6:0], status_flags_in[`CARRY_FLAG]};
     wire [7:0] result_ror = {status_flags_in[`CARRY_FLAG],inputA[7:1]};
 
@@ -29,6 +30,12 @@ module alu (
                 next_alu_flags[`ZERO_FLAG]     = (result_asl == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_asl[7];
             end
+            `LSR: begin
+                next_alu_result = result_lsr;
+                next_alu_flags[`CARRY_FLAG]    = inputA[7];
+                next_alu_flags[`ZERO_FLAG]     = (result_lsr == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_lsr[7];  // This is physically impossible but apparently they set it like that so whatever.
+            end
             `ROL: begin
                 next_alu_result = result_rol;
                 next_alu_flags[`CARRY_FLAG]    = inputA[7];
@@ -38,8 +45,8 @@ module alu (
             `ROR begin
                 next_alu_result = result_rol;
                 next_alu_flags[`CARRY_FLAG]    = inputA[0];
-                next_alu_flags[`ZERO_FLAG]     = (result_rol == 8'b0);
-                next_alu_flags[`NEGATIVE_FLAG] = result_rol[7];
+                next_alu_flags[`ZERO_FLAG]     = (result_ror == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_ror[7];
             end
             // If need be add a condition that checks for tmx
             default: begin
