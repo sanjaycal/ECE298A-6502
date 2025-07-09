@@ -51,6 +51,7 @@ reg [3:0] NEXT_STATE = S_IDLE;
 reg [15:0] MEMORY_ADDRESS   = 16'b0; 
 reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
+reg [7:0] INSTRUCTION;
 
 
 
@@ -77,15 +78,15 @@ always @(*) begin
         // In this state, we just need to increment the PC and decide where to go next.
         // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
         pc_enable = 1;   // Increment Program Counter
-        if(instruction[4:2] == `ADR_ZPG) begin
+        if(INSTRUCTION[4:2] == `ADR_ZPG) begin
             NEXT_STATE = S_ZPG_ABS_ADR_READ;
-        end else if(instruction[4:2] == `ADR_ZPG_X) begin
+        end else if(INSTRUCTION[4:2] == `ADR_ZPG_X) begin
             NEXT_STATE = S_IDL_ADR_WRITE;
-        end else if(instruction[4:2] == `ADR_ABS) begin
+        end else if(INSTRUCTION[4:2] == `ADR_ABS) begin
             NEXT_STATE = S_ABS_LB;
-        end else if(instruction[4:2] == `ADR_A) begin
+        end else if(INSTRUCTION[4:2] == `ADR_A) begin
             NEXT_STATE = S_ALU_FINAL;   // because this involves registers we can go straight to final
-        end else if(instruction == `OP_NOP) begin
+        end else if(INSTRUCTION == `OP_NOP) begin
             NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
         end else begin
             NEXT_STATE = S_IDLE; // Default case, should not happen.
@@ -169,12 +170,14 @@ always @(*) begin
     end
     S_ABS_HB: begin
         NEXT_STATE = S_ZPG_ABS_ADR_READ;
+        address_select = 1;
     end
     default: NEXT_STATE = S_IDLE;
     endcase
 end
 
 always @(posedge clk ) begin
+    INSTRUCTION <= instruction;
     if(res | !rdy) begin
         STATE <= S_IDLE;
         OPCODE <= `OP_NOP;

@@ -202,12 +202,12 @@ async def test_ASL_ABS(dut):
     await ClockCycles(dut.clk, 1)
 
     dut.uio_in.value = hex_to_num("30")
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == hex_to_num("30")
+    await ClockCycles(dut.clk, 3)
+    assert dut.uo_out.value == hex_to_num("10")
     await ClockCycles(dut.clk, 1)
     print_info(dut)
     assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
-    assert dut.uo_out.value == hex_to_num("10")
+    assert dut.uo_out.value == hex_to_num("30")
 
     dut._log.info("------------ADDRESS READ-----------")
 
