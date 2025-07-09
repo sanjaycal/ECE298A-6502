@@ -114,12 +114,13 @@ module tt_um_6502 (
   );
   
   alu ALU(
-    clk_cpu,
-    ALU_op,
-    ALU_inputA,
-    ALU_inputB,
-    ALU_output,
-    ALU_flags_output
+    .clk               (clk_cpu),
+    .alu_op            (ALU_op),
+    .inputA            (ALU_inputA),
+    .inputB            (ALU_inputB),
+    .status_flags_in   (processor_status_register),
+    .ALU_output        (ALU_output),
+    .ALU_flags_output  (ALU_flags_output)
   );
 
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
