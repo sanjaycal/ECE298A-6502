@@ -15,6 +15,7 @@ module alu (
     // --- Combinational "Pre-calculation" Wires ---
     // These calculate the result for every possible operation, all the time.
     wire [7:0] result_asl = inputA << 1;
+    wire [7:0] result_rol = {input[6:0], input[7]};
     // wire [7:0] result_adc = inputA + inputB + C_in; // Example for another op
 
     // --- Combinational Logic for selecting the result and flags ---
@@ -31,6 +32,14 @@ module alu (
                 next_alu_flags[`CARRY_FLAG]    = inputA[7];
                 next_alu_flags[`ZERO_FLAG]     = (result_asl == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_asl[7];
+            end
+            `ROL: begin
+                // Select the pre-calculated result
+                next_alu_result = result_rol;
+                // Set flags based on the inputs and the result
+                next_alu_flags[`CARRY_FLAG]    = inputA[7];
+                next_alu_flags[`ZERO_FLAG]     = (result_rol == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = result_rol[7];
             end
             // `ADC: begin ... end // Example for another op
             // If need be add a condition that checks for tmx
