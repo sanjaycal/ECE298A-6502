@@ -130,11 +130,11 @@ always @(*) begin
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_ROL_ZPG) begin
             input_data_latch_enable = `BUF_STORE_TWO;
-            alu_enable = `ROL
+            alu_enable = `ROL;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end else if(OPCODE == `OP_ROR_ZPG) begin
             input_data_latch_enable = `BUF_STORE_TWO;
-            alu_enable = `ROR
+            alu_enable = `ROR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end
 

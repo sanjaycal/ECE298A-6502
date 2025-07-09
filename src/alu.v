@@ -42,7 +42,7 @@ module alu (
                 next_alu_flags[`ZERO_FLAG]     = (result_rol == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_rol[7];
             end
-            `ROR begin
+            `ROR: begin
                 next_alu_result = result_rol;
                 next_alu_flags[`CARRY_FLAG]    = inputA[0];
                 next_alu_flags[`ZERO_FLAG]     = (result_ror == 8'b0);
