@@ -145,15 +145,14 @@ async def test_ASL_ZPG(dut):
     dut._log.info("------------WAIT TO OUTPUT-----------")
 
     # now we output 34(currently in the data buffer) to 0x066
-    dut.uio_in.value = hex_to_num("00")
+    dut.uio_in.value = hex_to_num("01")
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == 0  # check if we're outputting to 0x0066
-    assert dut.uio_oe.value == hex_to_num("ff")  # check if we are otuputting
-    assert dut.uio_out.value == 138  # check the output
     await ClockCycles(dut.clk, 1)
     print_info(dut)
+    assert dut.uio_out.value == 138  # check the output
+    assert dut.uio_oe.value == hex_to_num("ff")  # check if we are outputting
     assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
-    assert dut.uio_oe.value == 1  # check if the last bit is outputting
     assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066
 
     dut._log.info("------------DONE-----------")

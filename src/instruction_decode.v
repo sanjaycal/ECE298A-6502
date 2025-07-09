@@ -175,10 +175,11 @@ always @(*) begin
 end
 
 always @(posedge clk ) begin
-    if(res) begin
+    if(res | !rdy) begin
         STATE <= S_IDLE;
         OPCODE <= `OP_NOP;
         ADDRESSING <= 3'b000;
+        MEMORY_ADDRESS <= 0;
     end else if(rdy) begin
         STATE <= NEXT_STATE;
         if(NEXT_STATE == S_OPCODE_READ) begin
