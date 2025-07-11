@@ -53,7 +53,17 @@ reg [2:0] ADDRESSING;
 reg [7:0] OPCODE;
 reg [7:0] INSTRUCTION;
 
+// intermediate variables
 
+    wire is_shift_rotate_op;
+    wire [2:0] addr_mode_bits;
+    wire is_target_addr_mode;
+
+    assign is_shift_rotate_op = (OPCODE[1:0] == 2'b10);
+    assign addr_mode_bits = OPCODE[4:2];
+    assign is_target_addr_mode = ((addr_mode_bits == `ADR_ZPG) ||   
+                                (addr_mode_bits == `ADR_ABS)  || 
+                                (addr_mode_bits == `ADR_ZPG_X)); 
 
 always @(*) begin
     memory_address = 16'b0;
@@ -103,11 +113,7 @@ always @(*) begin
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = `BUF_LOAD_TWO;
 
-        wire is_shift_rotate_op = (OPCODE[1:0] == 2'b10);
-        wire [2:0] addr_mode_bits = OPCODE[4:2];
-        wire is_target_addr_mode = (addr_mode_bits == `ADR_ZPG)   
-                                (addr_mode_bits == `ADR_ABS)   
-                                (addr_mode_bits == `ADR_ZPG_X);  
+ 
 
         if (is_shift_rotate_op && is_target_addr_mode || (OPCODE == `OP_LD_X_ZPG)) begin
             NEXT_STATE = S_ALU_FINAL;
