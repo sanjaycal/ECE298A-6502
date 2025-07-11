@@ -323,6 +323,40 @@ async def test_ROL_ZPG_Base(dut):
 
 
 @cocotb.test()
+async def test_ROR_ZPG_Loop(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 10 us (100 KHz)
+    clock = Clock(dut.clk, 1, units="us")
+    cocotb.start_soon(clock.start())
+
+    # test instruction on it's own
+    for test_num in range(256):
+        memory_addr_with_value = random.randint(10, 255)
+        await reset_cpu(dut)
+
+        cval = test_num
+        carry = 0
+        pc = 1
+
+        for _ in range(8):
+            carry = cval % 2
+            ncval = ((cval // 2) % 256) + 128 * carry
+            await run_zpg_instruction(
+                dut,
+                hex_to_num("66"),
+                memory_addr_with_value,
+                pc,
+                cval,
+                ncval,
+            )
+            cval = ncval
+            pc += 2
+
+        assert cval == test_num
+
+
+@cocotb.test()
 async def test_ROR_ZPG_Base(dut):
     dut._log.info("Start")
 
