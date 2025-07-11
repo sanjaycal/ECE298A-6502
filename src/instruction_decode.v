@@ -94,7 +94,7 @@ always @(*) begin
     end
     S_ZPG_ABS_ADR_READ: begin
         address_select = 1;
-        //pc_enable = 1;
+        pc_enable = 1;
         if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ABS) begin
             memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         end
@@ -157,7 +157,7 @@ always @(*) begin
         memory_address = MEMORY_ADDRESS;
         address_select = 2'd1;
         rw = 0;
-        NEXT_STATE = S_OPCODE_READ;
+        NEXT_STATE = S_IDLE;
     end
     S_ALU_ADR_CALC_1:  begin
         alu_enable  = `ADD;
