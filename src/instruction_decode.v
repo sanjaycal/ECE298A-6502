@@ -75,10 +75,12 @@ always @(*) begin
         NEXT_STATE = S_OPCODE_READ;
     end
     S_OPCODE_READ: begin
+        pc_enable = 1;   // Increment Program Counter
         // In this state, we just need to increment the PC and decide where to go next.
         // The actual loading of OPCODE and ADDRESSING will happen in the clocked block below.
-        pc_enable = 1;   // Increment Program Counter
-        if(INSTRUCTION[4:2] == `ADR_ZPG) begin
+        if(INSTRUCTION == `OP_NOP) begin
+            NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
+        end else if(INSTRUCTION[4:2] == `ADR_ZPG) begin
             NEXT_STATE = S_ZPG_ABS_ADR_READ;
         end else if(INSTRUCTION[4:2] == `ADR_ZPG_X) begin
             NEXT_STATE = S_IDL_ADR_WRITE;
@@ -86,14 +88,13 @@ always @(*) begin
             NEXT_STATE = S_ABS_LB;
         end else if(INSTRUCTION[4:2] == `ADR_A) begin
             NEXT_STATE = S_ALU_FINAL;   // because this involves registers we can go straight to final
-        end else if(INSTRUCTION == `OP_NOP) begin
-            NEXT_STATE = S_IDLE; // NOP is a no-operation, so we just stay idle.
         end else begin
             NEXT_STATE = S_IDLE; // Default case, should not happen.
         end  
     end
     S_ZPG_ABS_ADR_READ: begin
         address_select = 1;
+        //pc_enable = 1;
         if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ABS) begin
             memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         end
@@ -157,7 +158,6 @@ always @(*) begin
         address_select = 2'd1;
         rw = 0;
         NEXT_STATE = S_OPCODE_READ;
-        pc_enable = 1;
     end
     S_ALU_ADR_CALC_1:  begin
         alu_enable  = `ADD;
@@ -175,9 +175,11 @@ always @(*) begin
         end
     end
     S_ABS_LB: begin
+        pc_enable = 1;
         NEXT_STATE = S_ABS_HB;
     end
     S_ABS_HB: begin
+        pc_enable = 1;
         NEXT_STATE = S_IDL_DATA_WRITE;
         memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         address_select = 1;

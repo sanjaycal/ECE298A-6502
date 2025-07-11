@@ -182,21 +182,16 @@ module tt_um_6502 (
     end
   end
 
-  always @(posedge clk_cpu) begin
+  always @(negedge clk_cpu) begin
     if (rst_n == 0) begin
-      pc <= 1;
-      
+      pc <= 0;
     end else begin
-
-
-
-
       if (pc_enable) begin
         pc <= pc+1;
       end
-
     end
   end
+
   // assign input_data_latch = (input_data_latch_enable == BUF_LOAD_TWO) ? instruction_register : input_data_latch;
   always @(negedge clk_cpu) begin
     if (rst_n == 0) begin
