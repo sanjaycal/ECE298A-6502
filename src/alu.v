@@ -16,7 +16,7 @@ module alu (
     // These calculate the result for every possible operation, all the time.
     wire [7:0] result_asl = inputA << 1;
     wire [7:0] result_lsr = inputA >> 1;
-    wire [7:0] result_rol = {inputA[6:0], status_flags_in[`CARRY_FLAG]};
+    wire [7:0] result_rol = {inputA[6:0], inputA[7]};
     wire [7:0] result_ror = {status_flags_in[`CARRY_FLAG],inputA[7:1]};
 
     reg [7:0] next_alu_result = 8'b0;
