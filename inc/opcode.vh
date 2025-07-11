@@ -1,7 +1,13 @@
 `ifndef OPCODES
     `define OPCODES 1
 
-    //OPCODE
+    //LOAD/STORE OPCODES
+
+    `define OP_LD_X_ZPG     8'b10100110
+
+
+
+    //SHIFTING OPCODES
 
     `define OP_ALU_SHIFT_ZPG    8'b00000110
     `define OP_ALU_SHIFT_ZPG_X  8'b00010110
@@ -34,10 +40,11 @@
     `define OP_ROR_ABS      8'b01101110
     `define OP_ROR_ZPG_X    8'b01110110
 
-    
+    // MISC OPCODES
     `define OP_JSR          8'b00100000
 
-    `define OP_NOP          8'b11101010         
+    `define OP_NOP          8'b11101010
+
     // ADDRESSING
     `define ADR_ZPG         3'b001
     `define ADR_ZPG_X       3'b101

@@ -23,7 +23,7 @@ module instruction_decode (
     output reg [1:0] data_buffer_enable, // 00 IDLE, 01 LOAD, 10 STORE
     output reg [1:0] input_data_latch_enable, // 00 IDLE, 01 LOAD, 10 STORE
     output reg       pc_enable,
-    output reg [3:0] alu_enable,
+    output reg [4:0] alu_enable,
     output reg [2:0] accumulator_enable, // BIT 2 is enable, BIT 1 is R/W_n and BIT 0 is BUS SELECT         
     output reg [2:0] stack_pointer_register_enable, // 0 is light blue and 1 is dark blue.
     output reg [2:0] index_register_X_enable,
@@ -36,7 +36,7 @@ localparam S_OPCODE_READ    = 4'd1;
 localparam S_ZPG_ABS_ADR_READ   = 4'd2;
 localparam S_IDL_DATA_WRITE = 4'd3;
 localparam S_IDL_ADR_WRITE  = 4'd4; 
-localparam S_ALU_FINAL      = 4'd5; // Final implies that the isn't anymore branching between this state and OPCODE_READ
+localparam S_ALU_FINAL      = 4'd5; // Final implies that there isn't anymore branching between this state and OPCODE_READ
 localparam S_DBUF_OUTPUT    = 4'd6;
 localparam S_ALU_TMX        = 4'd7;
 localparam S_ALU_ADR_CALC_1 = 4'd8;
@@ -102,7 +102,14 @@ always @(*) begin
     end
     S_IDL_DATA_WRITE: begin
         input_data_latch_enable = `BUF_LOAD_TWO;
-        if((OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG || (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG_X||  (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ABS) begin
+
+        wire is_shift_rotate_op = (OPCODE[1:0] == 2'b10);
+        wire [2:0] addr_mode_bits = OPCODE[4:2];
+        wire is_target_addr_mode = (addr_mode_bits == `ADR_ZPG)   
+                                (addr_mode_bits == `ADR_ABS)   
+                                (addr_mode_bits == `ADR_ZPG_X);  
+
+        if (is_shift_rotate_op && is_target_addr_mode || (OPCODE == `OP_LD_X_ZPG)) begin
             NEXT_STATE = S_ALU_FINAL;
         end
     end
@@ -114,6 +121,7 @@ always @(*) begin
     end
     S_ALU_FINAL: begin
         processor_status_register_rw = 0;
+        //SHIFTING
         if(OPCODE == `OP_ASL_ZPG || OPCODE ==  `OP_ASL_ZPG_X || OPCODE == `OP_ASL_ABS) begin
             input_data_latch_enable = `BUF_STORE_TWO;
             alu_enable  = `ASL;
@@ -138,12 +146,22 @@ always @(*) begin
             input_data_latch_enable = `BUF_STORE_TWO;
             alu_enable = `ROR;
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
+        end 
+        // LOAD
+        else if(OPCODE == `OP_LD_X_ZPG) begin
+            input_data_latch_enable = `BUF_STORE_TWO;
+            alu_enable = `FLG;
+            processor_status_register_write = `ZERO_FLAG | `NEGATIVE_FLAG;
         end
 
         NEXT_STATE = S_ALU_TMX;
     end
     S_ALU_TMX: begin
         alu_enable = `TMX;
+        if(OPCODE == `OP_LD_X_ZPG) begin
+            index_register_X_enable = `BUF_LOAD2_THREE;
+            NEXT_STATE = S_OPCODE_READ;
+        end
         if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ZPG_X || ADDRESSING == `ADR_ABS) begin
             data_buffer_enable = `BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;

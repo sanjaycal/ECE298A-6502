@@ -2,14 +2,16 @@
 
     `define ALU_OPCODES 1
     //OPCODE
-    `define NOP 4'b0000
-    `define ASL 4'b0001
-    `define LSR 4'b0010
-    `define ROL 4'b0011
-    `define ROR 4'b0100
+    `define NOP 5'b00000
+    `define ASL 5'b00001
+    `define LSR 5'b00010
+    `define ROL 5'b00011
+    `define ROR 5'b00100
 
-    `define ADD 4'b1110
-    `define TMX 4'b1111
+
+    `define FLG 5'b11101
+    `define ADD 5'b11110
+    `define TMX 5'b11111
 
 
 `endif
