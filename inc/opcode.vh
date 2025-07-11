@@ -23,9 +23,17 @@
 
     `define OP_ROL          8'b001xxx10
     `define OP_ROL_ZPG      8'b00100110
+    `define OP_ROL_A        8'b00101010
+    `define OP_ROL_ABS      8'b00101110
+    `define OP_ROL_ZPG_X    8'b00110110
+
 
     `define OP_ROR          8'b011xxx10
     `define OP_ROR_ZPG      8'b01100110
+    `define OP_ROR_A        8'b01101010
+    `define OP_ROR_ABS      8'b01101110
+    `define OP_ROR_ZPG_X    8'b01110110
+
     
     `define OP_JSR          8'b00100000
 
