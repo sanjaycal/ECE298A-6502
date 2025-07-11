@@ -32,7 +32,7 @@ module alu (
             end
             `LSR: begin
                 next_alu_result = result_lsr;
-                next_alu_flags[`CARRY_FLAG]    = inputA[7];
+                next_alu_flags[`CARRY_FLAG]    = inputA[0];
                 next_alu_flags[`ZERO_FLAG]     = (result_lsr == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_lsr[7];  // This is physically impossible but apparently they set it like that so whatever.
             end
@@ -60,7 +60,9 @@ module alu (
 
     always @(posedge clk) begin
         ALU_output <= next_alu_result;
-        ALU_flags_output <= next_alu_flags; 
+    end
+    always @(*) begin
+        ALU_flags_output = next_alu_flags; 
     end
 
 

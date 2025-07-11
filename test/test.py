@@ -167,7 +167,7 @@ async def test_ASL_ZPG_Clear(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     # test instruction on it's own
@@ -198,7 +198,7 @@ async def test_ASL_ZPG_Base(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     # test instruction on it's own
@@ -216,11 +216,42 @@ async def test_ASL_ZPG_Base(dut):
 
 
 @cocotb.test()
-async def test_LSR_ZPG(dut):
+async def test_LSR_ZPG_Clear(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
+    cocotb.start_soon(clock.start())
+
+    # test instruction on it's own
+    for test_num in range(256):
+        memory_addr_with_value = random.randint(10, 255)
+        await reset_cpu(dut)
+
+        cval = test_num
+        pc = 1
+
+        for _ in range(8):
+            await run_zpg_instruction(
+                dut,
+                hex_to_num("46"),
+                memory_addr_with_value,
+                pc,
+                cval,
+                (cval // 2) % 256,
+            )
+            cval = (cval // 2) % 256
+            pc += 2
+
+        assert cval == 0
+
+
+@cocotb.test()
+async def test_LSR_ZPG_Base(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 10 us (100 KHz)
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -237,11 +268,45 @@ async def test_LSR_ZPG(dut):
 
 
 @cocotb.test()
-async def test_ROL_ZPG(dut):
+async def test_ROL_ZPG_Loop(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
+    cocotb.start_soon(clock.start())
+
+    # test instruction on it's own
+    for test_num in range(256):
+        memory_addr_with_value = random.randint(10, 255)
+        await reset_cpu(dut)
+
+        cval = test_num
+        carry = 0
+        pc = 1
+
+        for _ in range(8):
+            carry = cval // 128
+            ncval = ((cval * 2) % 256) + carry
+            await run_zpg_instruction(
+                dut,
+                hex_to_num("26"),
+                memory_addr_with_value,
+                pc,
+                cval,
+                ncval,
+            )
+            cval = ncval
+            pc += 2
+
+        assert cval == test_num
+
+
+@cocotb.test()
+async def test_ROL_ZPG_Base(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 10 us (100 KHz)
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -253,16 +318,16 @@ async def test_ROL_ZPG(dut):
             memory_addr_with_value,
             1,
             test_num,
-            (test_num * 2) % 256,
+            (test_num * 2) % 256 + test_num // 128,
         )
 
 
 @cocotb.test()
-async def test_ROR_ZPG(dut):
+async def test_ROR_ZPG_Base(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -274,14 +339,14 @@ async def test_ROR_ZPG(dut):
             memory_addr_with_value,
             1,
             test_num,
-            (test_num // 2) % 256,
+            (test_num // 2) % 256 + 128 * (test_num % 2),
         )
 
 
 @cocotb.test()
 async def test_ASL_ABS(dut):
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -302,7 +367,7 @@ async def test_ASL_ABS(dut):
 @cocotb.test()
 async def test_LSR_ABS(dut):
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -323,7 +388,7 @@ async def test_LSR_ABS(dut):
 @cocotb.test()
 async def test_ROL_ABS(dut):
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -337,14 +402,14 @@ async def test_ROL_ABS(dut):
             memory_addr_with_value_LB,
             1,
             test_num,
-            (test_num * 2) % 256,
+            (test_num * 2) % 256 + test_num // 128,
         )
 
 
 @cocotb.test()
 async def test_ROR_ABS(dut):
     # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 1, units="us")
     cocotb.start_soon(clock.start())
 
     for test_num in range(256):
@@ -358,5 +423,5 @@ async def test_ROR_ABS(dut):
             memory_addr_with_value_LB,
             1,
             test_num,
-            (test_num // 2) % 256,
+            (test_num // 2) % 256 + 128 * (test_num % 2),
         )
