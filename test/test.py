@@ -4,6 +4,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
+import random
 
 
 def hex_to_num(hex_string):
@@ -36,87 +37,161 @@ async def test_ASL_ZPG(dut):
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
-    # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
-    dut.uio_in.value = hex_to_num("06")
+    for test_num in range(256):
+        memory_addr_with_value = random.randint(10, 255)
+        # Reset The chip
+        dut.ena.value = 1
+        dut.ui_in.value = 0
+        dut.uio_in.value = 0
+        dut.rst_n.value = 0
+        await ClockCycles(dut.clk, 10)
+        dut.rst_n.value = 1
+        dut.uio_in.value = hex_to_num("06")
 
-    dut._log.info("Test ASL zeropage behaviour")
-    # Write the instructions to the data bus that is being read from
-    # ASL oper is 06 oper
+        # Write the instructions to the data bus that is being read from
+        # ASL oper is 06 oper
 
-    dut._log.info("------------STARTING STATE DONE-----------")
+        # check that instructions are being read and that the PC is incrementing
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 1
+        assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+        await ClockCycles(dut.clk, 1)
 
-    # check that instructions are being read and that the PC is incrementing
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 1
-    assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
-    await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 0
 
-    assert dut.uo_out.value == 0
+        # tell it to read from memory address 0x00(memory_add_with_data)
+        dut.uio_in.value = memory_addr_with_value
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 1
+        assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+        await ClockCycles(dut.clk, 1)
 
-    dut._log.info("------------INSTRUCTION READ-----------")
+        assert dut.uo_out.value == 0
 
-    # tell it to read from memory address 0x0066
-    dut.uio_in.value = hex_to_num("66")
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 1
-    assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
-    await ClockCycles(dut.clk, 1)
+        dut.uio_in.value = test_num
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == memory_addr_with_value
+        # when it tries to read from 0x0066 it should get 69 as the value
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 0  # this shouldn't change though
 
-    assert dut.uo_out.value == 0
+        # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info("------------ADDRESS READ-----------")
-    dut.uio_in.value = 69
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == hex_to_num("66")
-    # when it tries to read from 0x0066 it should get 69 as the value
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value == 0  # this shouldn't change though
+        # now we write from the ALU to the data bus buffer
+        dut.uio_in.value = hex_to_num("00")
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0
+        await ClockCycles(dut.clk, 1)
 
-    # we arent trying to read at this time, so it doesnt matter
+        # we arent trying to read at this time, so it doesnt matter
 
-    dut._log.info("------------DATA READ-----------")
+        dut.uio_in.value = hex_to_num("00")
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0
+        await ClockCycles(dut.clk, 1)
 
-    # now we write from the ALU to the data bus buffer
-    dut.uio_in.value = hex_to_num("00")
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value % 2 == 0
-    await ClockCycles(dut.clk, 1)
+        # now we output 34(currently in the data buffer) to 0x066
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0  # check if we're outputting to 0x0066
+        await ClockCycles(dut.clk, 1)
 
-    # we arent trying to read at this time, so it doesnt matter
-
-    dut._log.info("------------ALU CALCULATED-----------")
-
-    dut.uio_in.value = hex_to_num("00")
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value % 2 == 0
-    await ClockCycles(dut.clk, 1)
-
-    dut._log.info("------------WAIT TO OUTPUT-----------")
-
-    # now we output 34(currently in the data buffer) to 0x066
-    await ClockCycles(dut.clk, 1)
-    assert dut.uo_out.value % 2 == 0  # check if we're outputting to 0x0066
-    await ClockCycles(dut.clk, 1)
-
-    assert dut.uio_out.value == 138  # check the output
-    assert dut.uio_oe.value == hex_to_num("ff")  # check if we are outputting
-    await ClockCycles(dut.clk, 1)
-    assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
-    assert dut.uo_out.value == hex_to_num("66")  # check if we're outputting to 0x0066
-    await ClockCycles(dut.clk, 1)
-
-    dut._log.info("------------DONE-----------")
+        assert dut.uio_out.value == (test_num * 2) % 256  # check the output
+        assert dut.uio_oe.value == hex_to_num("ff")  # check if we are outputting
+        await ClockCycles(dut.clk, 1)
+        assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
+        assert (
+            dut.uo_out.value == memory_addr_with_value
+        )  # check if we're outputting to the right spot
+        await ClockCycles(dut.clk, 1)
 
 
 @cocotb.test()
 async def test_LSR_ZPG(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 10 us (100 KHz)
+    clock = Clock(dut.clk, 10, units="us")
+    cocotb.start_soon(clock.start())
+
+    for test_num in range(256):
+        memory_addr_with_value = random.randint(10, 255)
+        # Reset The chip
+        dut.ena.value = 1
+        dut.ui_in.value = 0
+        dut.uio_in.value = 0
+        dut.rst_n.value = 0
+        await ClockCycles(dut.clk, 10)
+        dut.rst_n.value = 1
+        dut.uio_in.value = hex_to_num("46")
+
+        # Write the instructions to the data bus that is being read from
+        # ASL oper is 06 oper
+
+        # check that instructions are being read and that the PC is incrementing
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 1
+        assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+        await ClockCycles(dut.clk, 1)
+
+        assert dut.uo_out.value == 0
+
+        # tell it to read from memory address 0x00(memory_add_with_data)
+        dut.uio_in.value = memory_addr_with_value
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 1
+        assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+        await ClockCycles(dut.clk, 1)
+
+        assert dut.uo_out.value == 0
+
+        dut.uio_in.value = test_num
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == memory_addr_with_value
+        # when it tries to read from 0x0066 it should get 69 as the value
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value == 0  # this shouldn't change though
+
+        # we arent trying to read at this time, so it doesnt matter
+
+        # now we write from the ALU to the data bus buffer
+        dut.uio_in.value = hex_to_num("00")
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0
+        await ClockCycles(dut.clk, 1)
+
+        # we arent trying to read at this time, so it doesnt matter
+
+        dut.uio_in.value = hex_to_num("00")
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0
+        await ClockCycles(dut.clk, 1)
+
+        # now we output 34(currently in the data buffer) to 0x066
+        await ClockCycles(dut.clk, 1)
+        assert dut.uo_out.value % 2 == 0  # check if we're outputting to 0x0066
+        await ClockCycles(dut.clk, 1)
+
+        assert dut.uio_out.value == (test_num // 2) % 256  # check the output
+        assert dut.uio_oe.value == hex_to_num("ff")  # check if we are outputting
+        await ClockCycles(dut.clk, 1)
+        assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
+        assert (
+            dut.uo_out.value == memory_addr_with_value
+        )  # check if we're outputting to the right spot
+        await ClockCycles(dut.clk, 1)
+
+
+@cocotb.test()
+async def test_ROL_ZPG(dut):
+    dut._log.info("Start")
+
+    # Set the clock period to 10 us (100 KHz)
+    clock = Clock(dut.clk, 10, units="us")
+    cocotb.start_soon(clock.start())
+
+
+@cocotb.test()
+async def test_ROL_ZPG(dut):
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
@@ -131,7 +206,7 @@ async def test_LSR_ZPG(dut):
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
-    dut.uio_in.value = hex_to_num("46")
+    dut.uio_in.value = hex_to_num("26")
 
     dut._log.info("Test ASL zeropage behaviour")
     # Write the instructions to the data bus that is being read from
@@ -159,7 +234,7 @@ async def test_LSR_ZPG(dut):
     assert dut.uo_out.value == 0
 
     dut._log.info("------------ADDRESS READ-----------")
-    dut.uio_in.value = 69
+    dut.uio_in.value = hex_to_num("aa")
     await ClockCycles(dut.clk, 1)
     assert dut.uo_out.value == hex_to_num("66")
     # when it tries to read from 0x0066 it should get 69 as the value
@@ -192,7 +267,7 @@ async def test_LSR_ZPG(dut):
     assert dut.uo_out.value % 2 == 0  # check if we're outputting to 0x0066
     await ClockCycles(dut.clk, 1)
 
-    assert dut.uio_out.value == 34  # check the output
+    assert dut.uio_out.value == hex_to_num("55")  # check the output
     assert dut.uio_oe.value == hex_to_num("ff")  # check if we are outputting
     await ClockCycles(dut.clk, 1)
     assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
