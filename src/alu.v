@@ -5,7 +5,7 @@
 
 module alu (
     input  wire         clk, 
-    input  wire [3:0]   alu_op,
+    input  wire [4:0]   alu_op,
     input  wire [7:0]   inputA,
     input  wire [7:0]   inputB,
     input  wire [6:0]   status_flags_in,
@@ -47,6 +47,11 @@ module alu (
                 next_alu_flags[`CARRY_FLAG]    = inputA[0];
                 next_alu_flags[`ZERO_FLAG]     = (result_ror == 8'b0);
                 next_alu_flags[`NEGATIVE_FLAG] = result_ror[7];
+            end
+            `FLG: begin
+                next_alu_result = inputA;
+                next_alu_flags[`ZERO_FLAG]     = (inputA == 8'b0);
+                next_alu_flags[`NEGATIVE_FLAG] = inputA[7];
             end
             // If need be add a condition that checks for tmx
             default: begin

@@ -40,7 +40,7 @@ module tt_um_6502 (
   wire [2:0] index_register_y_enable;
   wire [2:0] index_register_x_enable;
   wire [2:0] stack_pointer_register_enable;
-  wire [3:0] ALU_op;
+  wire [4:0] ALU_op;
   wire [2:0] accumulator_enable;
   wire pc_enable;
   wire [1:0] input_data_latch_enable;
