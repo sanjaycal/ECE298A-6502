@@ -4,6 +4,7 @@
     //LOAD/STORE OPCODES
 
     `define OP_LD_X_ZPG     8'b10100110
+    `define OP_ST_X_ZPG     8'b10000110
 
 
 

@@ -5,6 +5,7 @@
 
  
 `include "../inc/alu_ops.vh"
+`include "../inc/buf_instructions.vh"
 
 
   localparam BUF_IDLE_TWO      = 2'b00;

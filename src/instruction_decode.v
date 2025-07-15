@@ -105,9 +105,7 @@ always @(*) begin
     S_ZPG_ABS_ADR_READ: begin
         address_select = 1;
         pc_enable = 1;
-        if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ABS) begin
-            memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
-        end
+        memory_address = MEMORY_ADDRESS; // Puts the memory address read in adh/adl
         NEXT_STATE = S_IDL_DATA_WRITE;
     end
     S_IDL_DATA_WRITE: begin
@@ -115,9 +113,9 @@ always @(*) begin
 
  
 
-        if (is_shift_rotate_op && is_target_addr_mode || (OPCODE == `OP_LD_X_ZPG)) begin
+        //if (is_shift_rotate_op && is_target_addr_mode || (OPCODE == `OP_LD_X_ZPG)) begin
             NEXT_STATE = S_ALU_FINAL;
-        end
+        //end
     end
     S_IDL_ADR_WRITE: begin
         input_data_latch_enable = `BUF_IDLE_TWO;
@@ -159,21 +157,27 @@ always @(*) begin
             alu_enable = `FLG;
             processor_status_register_write = `ZERO_FLAG | `NEGATIVE_FLAG;
         end
-
         NEXT_STATE = S_ALU_TMX;
     end
     S_ALU_TMX: begin
-        alu_enable = `TMX;
         if(OPCODE == `OP_LD_X_ZPG) begin
             index_register_X_enable = `BUF_LOAD2_THREE;
             NEXT_STATE = S_OPCODE_READ;
+            alu_enable = `TMX;
         end
-        if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ZPG_X || ADDRESSING == `ADR_ABS) begin
+        else if(OPCODE == `OP_ST_X_ZPG) begin
+            index_register_X_enable = `BUF_STORE2_THREE;
             data_buffer_enable = `BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
+        end
+        else if(ADDRESSING == `ADR_ZPG || ADDRESSING == `ADR_ZPG_X || ADDRESSING == `ADR_ABS) begin
+            data_buffer_enable = `BUF_LOAD_TWO;
+            NEXT_STATE = S_DBUF_OUTPUT;
+            alu_enable = `TMX;
         end else if(ADDRESSING == `ADR_A) begin
             accumulator_enable = `BUF_LOAD2_THREE;
             NEXT_STATE = S_OPCODE_READ;
+            alu_enable = `TMX;
         end
     end 
     S_DBUF_OUTPUT: begin
@@ -232,7 +236,7 @@ always @(posedge clk ) begin
             end else if (instruction[4:2] == `ADR_ZPG_X) begin
                 ADDRESSING <= `ADR_ZPG_X;
             end
-        end else if(NEXT_STATE == S_ABS_LB || (NEXT_STATE == S_ZPG_ABS_ADR_READ && (OPCODE & `OP_ALU_MASK) == `OP_ALU_SHIFT_ZPG)) begin
+        end else if(NEXT_STATE == S_ABS_LB || NEXT_STATE == S_ZPG_ABS_ADR_READ) begin
             MEMORY_ADDRESS <= {8'h00, instruction};
         end else if(NEXT_STATE == S_ABS_HB) begin
             MEMORY_ADDRESS <= {instruction, MEMORY_ADDRESS[7:0]};

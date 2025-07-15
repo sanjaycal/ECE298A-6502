@@ -44,7 +44,7 @@ async def reset_cpu(dut):
     await ClockCycles(dut.clk, 2)
 
 
-async def run_zpg_instruction(
+async def test_zpg_instruction(
     dut, opcode, addr_LB, starting_PC, input_value, output_value, enable_pc_checks=True
 ):
     # feed in the opcode
@@ -91,6 +91,45 @@ async def run_zpg_instruction(
     await ClockCycles(dut.clk, 1)
     assert dut.uio_out.value % 2 == 0  # last bit should be 0 for write
     assert dut.uo_out.value == addr_LB  # check the mem addr we are writing to
+    await ClockCycles(dut.clk, 1)
+
+
+async def run_input_zpg_instruction(
+    dut, opcode, addr_LB, starting_PC, input_value, enable_pc_checks=True
+):
+    # feed in the opcode
+    dut.uio_in.value = opcode
+    await ClockCycles(dut.clk, 1)
+    if enable_pc_checks:
+        assert dut.uo_out.value == starting_PC
+    assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0
+
+    # feed in the addr to read from
+    dut.uio_in.value = addr_LB
+    await ClockCycles(dut.clk, 1)
+    if enable_pc_checks:
+        assert dut.uo_out.value == starting_PC + 1
+    assert dut.uio_out.value % 2 == 1  # last bit should be 1 for read
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0
+
+    # feed in the data we want to operate on
+    dut.uio_in.value = input_value
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == addr_LB
+    await ClockCycles(dut.clk, 1)
+    assert dut.uo_out.value == 0  # this shouldn't change though
+
+    # wait
+    dut.uio_in.value = hex_to_num("00")
+    await ClockCycles(dut.clk, 1)
+    await ClockCycles(dut.clk, 1)
+
+    # wait
+    dut.uio_in.value = hex_to_num("00")
+    await ClockCycles(dut.clk, 1)
     await ClockCycles(dut.clk, 1)
 
 
@@ -177,7 +216,7 @@ async def test_ASL_ZPG_Clear(dut):
         pc = 1
 
         for _ in range(8):
-            await run_zpg_instruction(
+            await test_zpg_instruction(
                 dut,
                 hex_to_num("06"),
                 memory_addr_with_value,
@@ -203,7 +242,7 @@ async def test_ASL_ZPG_Base(dut):
     for test_num in range(256):
         memory_addr_with_value = random.randint(10, 255)
         await reset_cpu(dut)
-        await run_zpg_instruction(
+        await test_zpg_instruction(
             dut,
             hex_to_num("06"),
             memory_addr_with_value,
@@ -230,7 +269,7 @@ async def test_LSR_ZPG_Clear(dut):
         pc = 1
 
         for _ in range(8):
-            await run_zpg_instruction(
+            await test_zpg_instruction(
                 dut,
                 hex_to_num("46"),
                 memory_addr_with_value,
@@ -255,7 +294,7 @@ async def test_LSR_ZPG_Base(dut):
     for test_num in range(256):
         memory_addr_with_value = random.randint(10, 255)
         await reset_cpu(dut)
-        await run_zpg_instruction(
+        await test_zpg_instruction(
             dut,
             hex_to_num("46"),
             memory_addr_with_value,
@@ -285,7 +324,7 @@ async def test_ROL_ZPG_Loop(dut):
         for _ in range(8):
             carry = cval // 128
             ncval = ((cval * 2) % 256) + carry
-            await run_zpg_instruction(
+            await test_zpg_instruction(
                 dut,
                 hex_to_num("26"),
                 memory_addr_with_value,
@@ -310,7 +349,7 @@ async def test_ROL_ZPG_Base(dut):
     for test_num in range(256):
         memory_addr_with_value = random.randint(10, 255)
         await reset_cpu(dut)
-        await run_zpg_instruction(
+        await test_zpg_instruction(
             dut,
             hex_to_num("26"),
             memory_addr_with_value,
@@ -340,7 +379,7 @@ async def test_ROR_ZPG_Loop(dut):
         for _ in range(8):
             carry = cval % 2
             ncval = ((cval // 2) % 256) + 128 * carry
-            await run_zpg_instruction(
+            await test_zpg_instruction(
                 dut,
                 hex_to_num("66"),
                 memory_addr_with_value,
@@ -365,7 +404,7 @@ async def test_ROR_ZPG_Base(dut):
     for test_num in range(256):
         memory_addr_with_value = random.randint(10, 255)
         await reset_cpu(dut)
-        await run_zpg_instruction(
+        await test_zpg_instruction(
             dut,
             hex_to_num("66"),
             memory_addr_with_value,
@@ -594,4 +633,20 @@ async def test_ROR_ABS_Base(dut):
             1,
             test_num,
             (test_num // 2) % 256 + 128 * (test_num % 2),
+        )
+
+
+@cocotb.test()
+async def test_LDX_ZPG_Base(dut):
+    clock = Clock(dut.clk, 1, units="us")
+    cocotb.start_soon(clock.start())
+
+    for test_num in range(1, 256):
+        memory_addr_with_value = random.randint(10, 255)
+        await reset_cpu(dut)
+        await run_input_zpg_instruction(
+            dut, hex_to_num("a6"), memory_addr_with_value, 1, test_num
+        )
+        await test_zpg_instruction(
+            dut, hex_to_num("86"), memory_addr_with_value, 3, 0, test_num
         )
