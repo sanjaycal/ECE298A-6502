@@ -46,6 +46,10 @@
     `define OP_ROR_ABS      8'b01101110
     `define OP_ROR_ZPG_X    8'b01110110
 
+    `define OP_AND_ZPG      8'b00100101
+    `define OP_AND_ABS      8'b00101110
+    `define OP_AND_ZPG_X    8'b00110101
+
     // MISC OPCODES
     `define OP_JSR          8'b00100000
 
