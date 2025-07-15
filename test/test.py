@@ -666,3 +666,19 @@ async def test_LDA_ZPG_Base(dut):
         await test_zpg_instruction(
             dut, hex_to_num("85"), memory_addr_with_value, 3, 0, test_num
         )
+
+
+@cocotb.test()
+async def test_LDY_ZPG_Base(dut):
+    clock = Clock(dut.clk, 1, units="us")
+    cocotb.start_soon(clock.start())
+
+    for test_num in range(1, 256):
+        memory_addr_with_value = random.randint(10, 255)
+        await reset_cpu(dut)
+        await run_input_zpg_instruction(
+            dut, hex_to_num("a3"), memory_addr_with_value, 1, test_num
+        )
+        await test_zpg_instruction(
+            dut, hex_to_num("83"), memory_addr_with_value, 3, 0, test_num
+        )

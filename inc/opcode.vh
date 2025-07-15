@@ -9,6 +9,8 @@
     `define OP_LD_A_ZPG     8'b10100101
     `define OP_ST_A_ZPG     8'b10000101
 
+    `define OP_LD_Y_ZPG     8'b10100011
+    `define OP_ST_Y_ZPG     8'b10000011
 
 
     //SHIFTING OPCODES
