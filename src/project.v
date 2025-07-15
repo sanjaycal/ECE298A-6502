@@ -66,8 +66,8 @@ module tt_um_6502 (
   reg [15:0] ab;
 
   reg [7:0] input_data_latch;
-  reg [7:0] internal_data_bus;
-  reg [7:0] alu_output_bus;
+  reg [7:0] bus1;
+  reg [7:0] bus2;
   reg [7:0] data_bus_buffer=8'b0;
 
   reg [15:0] pc;
@@ -127,8 +127,8 @@ module tt_um_6502 (
   interrupt_logic interruptLogic(clk, res_in, irq_in, nmi_in, res, irq, nmi);
 
   always @(*) begin
-    internal_data_bus = 8'h00;
-    alu_output_bus    = 8'h00;
+    bus1 = 8'h00;
+    bus2    = 8'h00;
     next_accumulator = accumulator;
     next_index_register_x = index_register_x;
     next_index_register_y = index_register_y;
@@ -136,46 +136,46 @@ module tt_um_6502 (
     next_processor_status_register = processor_status_register;
     //putting data on the bus 1
     if(input_data_latch_enable == BUF_STORE_TWO) begin
-      internal_data_bus = input_data_latch;
+      bus1 = input_data_latch;
     end else if(accumulator_enable == BUF_STORE1_THREE) begin
-      internal_data_bus = accumulator;
+      bus1 = accumulator;
     end else if(index_register_x_enable == BUF_STORE1_THREE) begin
-      internal_data_bus = index_register_x;
+      bus1 = index_register_x;
     end else if(index_register_y_enable == BUF_STORE1_THREE) begin
-      internal_data_bus = index_register_y;
+      bus1 = index_register_y;
     end
     //reading data from the bus 1
     if(accumulator_enable == BUF_LOAD1_THREE) begin
-       next_accumulator = internal_data_bus;
+       next_accumulator = bus1;
     end
     if(index_register_x_enable == BUF_LOAD1_THREE) begin
-      next_index_register_x = internal_data_bus;
+      next_index_register_x = bus1;
     end
     if(index_register_y_enable == BUF_LOAD1_THREE) begin
-      next_index_register_y = internal_data_bus;
+      next_index_register_y = bus1;
     end
     //putting data on the bus 2
     if(ALU_op == `TMX) begin
-      alu_output_bus = ALU_output;
+      bus2 = ALU_output;
     end else if(accumulator_enable == BUF_STORE2_THREE) begin
-      alu_output_bus = accumulator;
+      bus2 = accumulator;
     end else if(index_register_x_enable == BUF_STORE2_THREE) begin
-      alu_output_bus = index_register_x;
+      bus2 = index_register_x;
     end else if(index_register_y_enable == BUF_STORE2_THREE) begin
-      alu_output_bus = index_register_y;
+      bus2 = index_register_y;
     end
     //reading data from the bus 2
     if(data_buffer_enable == BUF_LOAD_TWO) begin
-      next_data_bus_buffer = alu_output_bus;
+      next_data_bus_buffer = bus2;
     end
     if(accumulator_enable == BUF_LOAD2_THREE) begin
-       next_accumulator = alu_output_bus;
+       next_accumulator = bus2;
     end
     if(index_register_x_enable == BUF_LOAD2_THREE) begin
-      next_index_register_x = alu_output_bus;
+      next_index_register_x = bus2;
     end
     if(index_register_y_enable == BUF_LOAD2_THREE) begin
-      next_index_register_y = alu_output_bus;
+      next_index_register_y = bus2;
     end
     //alu stuff
     if(ALU_op != `NOP && ALU_op != `TMX) begin
@@ -230,8 +230,8 @@ module tt_um_6502 (
   assign uio_out = clk_cpu?(data_buffer_enable == 2'd2 ? data_bus_buffer : 8'b0 ) : {7'b0,rw} ;
   assign uio_oe  = rw?8'h00:8'hff;
 
-assign ALU_inputA = internal_data_bus;
-assign ALU_inputB = alu_output_bus;
+assign ALU_inputA = bus1;
+assign ALU_inputB = bus2;
 
 // The address bus mux
 always @(*) begin

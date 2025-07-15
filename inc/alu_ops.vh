@@ -9,6 +9,7 @@
     `define ROR 5'b00100
     `define AND 5'b00101
     `define OR 5'b00110
+    `define INC 5'b00111
 
 
     `define FLG 5'b11101
