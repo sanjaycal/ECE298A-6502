@@ -152,7 +152,7 @@ always @(*) begin
             processor_status_register_write = `CARRY_FLAG | `ZERO_FLAG | `NEGATIVE_FLAG;
         end 
         // LOAD
-        else if(OPCODE == `OP_LD_X_ZPG) begin
+        else if(OPCODE == `OP_LD_X_ZPG || OPCODE==`OP_LD_A_ZPG) begin
             input_data_latch_enable = `BUF_STORE_TWO;
             alu_enable = `FLG;
             processor_status_register_write = `ZERO_FLAG | `NEGATIVE_FLAG;
@@ -165,8 +165,18 @@ always @(*) begin
             NEXT_STATE = S_OPCODE_READ;
             alu_enable = `TMX;
         end
+        else if(OPCODE == `OP_LD_A_ZPG) begin
+            accumulator_enable = `BUF_LOAD2_THREE;
+            NEXT_STATE = S_OPCODE_READ;
+            alu_enable = `TMX;
+        end
         else if(OPCODE == `OP_ST_X_ZPG) begin
             index_register_X_enable = `BUF_STORE2_THREE;
+            data_buffer_enable = `BUF_LOAD_TWO;
+            NEXT_STATE = S_DBUF_OUTPUT;
+        end
+        else if(OPCODE == `OP_ST_A_ZPG) begin
+            accumulator_enable = `BUF_STORE2_THREE;
             data_buffer_enable = `BUF_LOAD_TWO;
             NEXT_STATE = S_DBUF_OUTPUT;
         end
