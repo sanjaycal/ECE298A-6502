@@ -720,7 +720,7 @@ async def test_INC_ZPG_Base(dut):
         await reset_cpu(dut)
         await test_zpg_instruction(
             dut,
-            hex_to_num("25"),
+            hex_to_num("e6"),
             memory_addr_with_value,
             1,
             test_num,
